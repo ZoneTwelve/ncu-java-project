@@ -106,15 +106,19 @@ public class game extends PApplet{
     }
     public void control(char k, boolean pressed){
       switch(k){
+        case 'W':
         case 'w':
           acc.y =    (pressed?acc.z:0)*dir.y;
         break;
+        case 'A':
         case 'a':
           acc.x = -1*(pressed?acc.z:0);
         break;
+        case 'S':
         case 's':
           acc.y = -1*(pressed?acc.z:0)*dir.y;
         break;
+        case 'D':
         case 'd':
           acc.x =    (pressed?acc.z:0);
         break;
