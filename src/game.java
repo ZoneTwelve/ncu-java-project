@@ -6,7 +6,7 @@ import java.util.ArrayList;
 public class game extends PApplet{
   actorObject player;
   ArrayList<bulletObject> bullets = new ArrayList<bulletObject>();
-  ArrayList<actorObject>  emenys  = new ArrayList<actorObject>();
+  ArrayList<actorObject>  enemys  = new ArrayList<actorObject>();
   //ArrayList keyEvents = new ArrayList();
   public static void main(String[] args) {
       PApplet.main("game");
@@ -18,16 +18,20 @@ public class game extends PApplet{
 
   public void setup(){
     player = new actorObject(new PVector(width/2, height/2));
-//    keyEvents.add(player);
+    enemys.add(new actorObject(new PVector(20, 50), new PVector(0, 1)));
+    enemys.get(0).control(' ', true);
+    //keyEvents.add(player);
   }
 
   public void draw(){
     background(51);
     gameing();
+    for(int i=0;i<enemys.size();i++)
+      enemys.get(i).run();
+    
     for(int i=0;i<bullets.size();i++){
       bulletObject b = bullets.get(i);
       b.run();
-//      println(b);
       if(b.outside()) {
         bullets.remove(i);
         i--;
@@ -40,7 +44,7 @@ public class game extends PApplet{
   }
   
   public void keyTyped(){
-    println(player.bulletLimit);
+    //debug mode
     if(key=='t')
       player.changeMode(0);
     if(key=='g')
@@ -49,14 +53,17 @@ public class game extends PApplet{
       player.changeSpeed(1);
     if(key=='h')
       player.changeSpeed(-1);
+    //debug mode end
   }
   public void keyPressed(){
-//    for(int i=0;i<keyEvents.size();i++)
-//      keyEvents[i].control(key, true);
+    //for(int i=0;i<keyEvents.size();i++)
+      //keyEvents[i].control(key, true);
     player.control(key, true);
+    enemys.get(0).control(key, true);
   }
   public void keyReleased(){
     player.control(key, false);
+    enemys.get(0).control(key, false);
   }
   
   class actorObject{
@@ -67,6 +74,11 @@ public class game extends PApplet{
     PImage style;
     PVector pos = null,
             acc = new PVector(0,0,5);
+    PVector dir = new PVector(0, -1);
+    actorObject(PVector p, PVector dir){
+      this.dir = dir;
+      this.pos = p;
+    }
     actorObject(PVector p){
       this.pos = p;
     }
@@ -95,13 +107,13 @@ public class game extends PApplet{
     public void control(char k, boolean pressed){
       switch(k){
         case 'w':
-          acc.y = -1*(pressed?acc.z:0);
+          acc.y =    (pressed?acc.z:0)*dir.y;
         break;
         case 'a':
           acc.x = -1*(pressed?acc.z:0);
         break;
         case 's':
-          acc.y =    (pressed?acc.z:0);
+          acc.y = -1*(pressed?acc.z:0)*dir.y;
         break;
         case 'd':
           acc.x =    (pressed?acc.z:0);
@@ -131,13 +143,13 @@ public class game extends PApplet{
         bullets.add(
             new bulletObject(
               new PVector(this.pos.x-5, this.pos.y), 
-              new PVector(0, -20)
+              new PVector(0, 20*dir.y)
             )
           );
         bullets.add(
             new bulletObject(
               new PVector(this.pos.x+5, this.pos.y), 
-              new PVector(0, -20)
+              new PVector(0, 20*dir.y)
             )
           );
       }
@@ -145,8 +157,8 @@ public class game extends PApplet{
         for(int i=-2;i<3;i++)
           bullets.add(
             new bulletObject(
-              new PVector(this.pos.x, this.pos.y+random(0,2)), 
-              new PVector((float)1*i, -20)
+              new PVector(this.pos.x, this.pos.y), 
+              new PVector((float)1*i, 20*dir.y)
             )
           );
       }
@@ -154,23 +166,36 @@ public class game extends PApplet{
   }
   class bulletObject{
     PVector pos, acc;
+    private int movingMode = 1;
+    public void basicSetup(PVector pos, PVector acc){this.pos = pos;this.acc = acc;}
+    bulletObject(PVector pos, PVector acc, int mode){
+      movingMode = mode;
+      basicSetup(pos, acc);
+    }
     bulletObject(PVector pos, PVector acc){
-      this.pos = pos;
-      this.acc = acc;
+      basicSetup(pos, acc);
     }
     public boolean touch(){
       return false;
     }
     public void run(){
-      this.pos.add(this.acc);
+      this.move();
 //      this.pos.x+=(float)random((float) -2.2);
 //      this.pos.y+=random(-10, 10)/100f;
       this.display();
     }
+    public void move() {
+      if(movingMode==0) {
+        this.pos.add(this.acc);
+      }else if(movingMode==1){
+        this.pos.add(this.acc);
+        this.pos.x = this.pos.x+5*sin(millis());
+      }
+    }
     public void display() {
       fill(255);
       stroke(255);
-      ellipse(this.pos.x, this.pos.y, 10, 10);
+      ellipse(this.pos.x, this.pos.y, 5, 5);
     }
     public boolean outside(){
       return this.pos.x>width||this.pos.y>height||this.pos.x<0||this.pos.y<0;
