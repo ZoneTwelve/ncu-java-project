@@ -45,6 +45,10 @@ public class game extends PApplet{
       player.changeMode(0);
     if(key=='g')
       player.changeMode(1);
+    if(key=='y')
+      player.changeSpeed(1);
+    if(key=='h')
+      player.changeSpeed(-1);
   }
   public void keyPressed(){
 //    for(int i=0;i<keyEvents.size();i++)
