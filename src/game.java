@@ -1,9 +1,7 @@
-package finalproject;
 import processing.core.PApplet;
-
 public class game extends PApplet{
   public static void main(String[] args) {
-      PApplet.main("ZoneGame");
+      PApplet.main("game");
   }
 
   public void settings(){size(600, 600);}
