@@ -27,6 +27,7 @@ public class game extends PApplet{
     for(int i=0;i<bullets.size();i++){
       bulletObject b = bullets.get(i);
       b.run();
+//      println(b);
       if(b.outside()) {
         bullets.remove(i);
         i--;
@@ -38,6 +39,13 @@ public class game extends PApplet{
     player.run();
   }
   
+  public void keyTyped(){
+    println(player.bulletLimit);
+    if(key=='t')
+      player.changeMode(0);
+    if(key=='g')
+      player.changeMode(1);
+  }
   public void keyPressed(){
 //    for(int i=0;i<keyEvents.size();i++)
 //      keyEvents[i].control(key, true);
@@ -50,7 +58,7 @@ public class game extends PApplet{
   class actorObject{
     private int weal;//weapon level
     private boolean stpd = false;//shotting key pressed
-    private int bulletLimit = 50, bulletCounter = 0;
+    private int bulletLimit = 9, bulletCounter = 0;
             //, shottingDelay = 0;
     PImage style;
     PVector pos = null,
@@ -59,12 +67,20 @@ public class game extends PApplet{
       this.pos = p;
     }
     public void run() {
-      pos.add(acc);
+      this.move();
       this.display();
       if(stpd)
+//        for(int i=0;i<10;i++)
         this.shooting();
-      if(bulletCounter>0)
-        bulletCounter--;
+//      if(bulletCounter>0)
+//        bulletCounter--;
+    }
+    public void move(){
+      float x = this.pos.x+this.acc.x, y = this.pos.y+this.acc.y;
+      if(x>0&&x<width)
+        this.pos.x+=this.acc.x;
+      if(y>0&&y<height)
+        this.pos.y+=this.acc.y;
     }
     public void display(){
       fill(255);
@@ -92,19 +108,44 @@ public class game extends PApplet{
         break;
       }
     }
+    public void changeSpeed(int speed){
+      if(bulletLimit+speed>0&&bulletLimit+speed<10)
+        bulletLimit+=speed;
+    }
+    public void changeMode(int mode){
+      weal = mode;
+    }
     public void shooting(){
 //      if(bulletCounter>bulletLimit) {
 //        return;
 //      }
 //      bulletCounter+=25 ;
-
-      bullets.add(
-        new bulletObject(
-          new PVector(this.pos.x, this.pos.y), 
-          new PVector(0, -5)
-        )
-      );
-      
+      bulletCounter = (bulletCounter+1)%bulletLimit;
+      if(bulletCounter!=0)
+        return;
+      if(weal==0){
+        bullets.add(
+            new bulletObject(
+              new PVector(this.pos.x-5, this.pos.y), 
+              new PVector(0, -20)
+            )
+          );
+        bullets.add(
+            new bulletObject(
+              new PVector(this.pos.x+5, this.pos.y), 
+              new PVector(0, -20)
+            )
+          );
+      }
+      if(weal==1) {
+        for(int i=-2;i<3;i++)
+          bullets.add(
+            new bulletObject(
+              new PVector(this.pos.x, this.pos.y+random(0,2)), 
+              new PVector((float)1*i, -20)
+            )
+          );
+      }
     }
   }
   class bulletObject{
@@ -117,12 +158,14 @@ public class game extends PApplet{
       return false;
     }
     public void run(){
-//      this.pos.add(this.acc);
-      this.pos.x+=this.acc.x;
-      this.pos.y+=this.acc.y;
+      this.pos.add(this.acc);
+//      this.pos.x+=(float)random((float) -2.2);
+//      this.pos.y+=random(-10, 10)/100f;
       this.display();
     }
     public void display() {
+      fill(255);
+      stroke(255);
       ellipse(this.pos.x, this.pos.y, 10, 10);
     }
     public boolean outside(){
