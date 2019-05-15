@@ -2,35 +2,131 @@ import processing.core.PApplet;
 import processing.core.PVector;
 import processing.core.PImage;
 import java.util.ArrayList;
+//import java.awt.event.ActionListener;
 public class game extends PApplet{
   actorObject player;
-  actorObject emenys[];
+  ArrayList<bulletObject> bullets = new ArrayList<bulletObject>();
+  ArrayList<actorObject>  emenys  = new ArrayList<actorObject>();
+  //ArrayList keyEvents = new ArrayList();
   public static void main(String[] args) {
       PApplet.main("game");
   }
   public void settings(){
-    fullScreen();
-    //size(600, 600);
+    //fullScreen();
+    size(600, 600);
   }
 
   public void setup(){
-    
+    player = new actorObject(new PVector(width/2, height/2));
+//    keyEvents.add(player);
   }
 
-  public void draw(){}
+  public void draw(){
+    background(51);
+    gameing();
+    for(int i=0;i<bullets.size();i++){
+      bulletObject b = bullets.get(i);
+      b.run();
+      if(b.outside()) {
+        bullets.remove(i);
+        i--;
+      }
+    }
+  }
   
   public void gameing(){
-    
+    player.run();
   }
-
+  
+  public void keyPressed(){
+//    for(int i=0;i<keyEvents.size();i++)
+//      keyEvents[i].control(key, true);
+    player.control(key, true);
+  }
+  public void keyReleased(){
+    player.control(key, false);
+  }
+  
   class actorObject{
+    private int weal;//weapon level
+    private boolean stpd = false;//shotting key pressed
+    private int bulletLimit = 50, bulletCounter = 0;
+            //, shottingDelay = 0;
     PImage style;
-    PVector pos;
-    actorObject(){
+    PVector pos = null,
+            acc = new PVector(0,0,5);
+    actorObject(PVector p){
+      this.pos = p;
+    }
+    public void run() {
+      pos.add(acc);
+      this.display();
+      if(stpd)
+        this.shooting();
+      if(bulletCounter>0)
+        bulletCounter--;
+    }
+    public void display(){
+      fill(255);
+      stroke(255);
+      rect(pos.x-10, pos.y-10, 20, 20);
+      //image(style, pos.y, pos.x);
+    }
+    public void control(char k, boolean pressed){
+      switch(k){
+        case 'w':
+          acc.y = -1*(pressed?acc.z:0);
+        break;
+        case 'a':
+          acc.x = -1*(pressed?acc.z:0);
+        break;
+        case 's':
+          acc.y =    (pressed?acc.z:0);
+        break;
+        case 'd':
+          acc.x =    (pressed?acc.z:0);
+        break;
+        case ' ':
+          stpd = pressed;
+          //this.shooting();
+        break;
+      }
+    }
+    public void shooting(){
+//      if(bulletCounter>bulletLimit) {
+//        return;
+//      }
+//      bulletCounter+=25 ;
+
+      bullets.add(
+        new bulletObject(
+          new PVector(this.pos.x, this.pos.y), 
+          new PVector(0, -5)
+        )
+      );
       
     }
-    void display(){
-      image(style, pos.y, pos.x);
+  }
+  class bulletObject{
+    PVector pos, acc;
+    bulletObject(PVector pos, PVector acc){
+      this.pos = pos;
+      this.acc = acc;
+    }
+    public boolean touch(){
+      return false;
+    }
+    public void run(){
+//      this.pos.add(this.acc);
+      this.pos.x+=this.acc.x;
+      this.pos.y+=this.acc.y;
+      this.display();
+    }
+    public void display() {
+      ellipse(this.pos.x, this.pos.y, 10, 10);
+    }
+    public boolean outside(){
+      return this.pos.x>width||this.pos.y>height||this.pos.x<0||this.pos.y<0;
     }
   }
 }
