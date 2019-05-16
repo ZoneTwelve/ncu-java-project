@@ -17,41 +17,73 @@ public class game extends PApplet{
   }
 
   public void setup(){
-    player = new actorObject(new PVector(width/2, height/2));
-    enemys.add(new actorObject(new PVector(20, 50), new PVector(0, 1)));
-    enemys.get(0).control(' ', true);
+    PImage playerStyle = loadImage("images/player.png");
+    player = new actorObject(playerStyle, new PVector(width/2, height/2));
+    enemys.add(new actorObject(new PVector(200, 50), new PVector(0, 1)));
+    actorObject e1 = enemys.get(0);
+    e1.control(' ', true);
+    e1.setAtkSpeed(50);
     //keyEvents.add(player);
   }
 
   public void draw(){
     background(51);
     gameing();
-    for(int i=0;i<enemys.size();i++)
-      enemys.get(i).run();
-    
-    for(int i=0;i<bullets.size();i++){
-      bulletObject b = bullets.get(i);
-      b.run();
-      if(b.outside()) {
-        bullets.remove(i);
-        i--;
-      }
-    }
   }
   
   public void gameing(){
     player.run();
+    for(int i=0;i<enemys.size();i++) {
+      enemys.get(i).run();
+    }
+    for(int i=0;i<bullets.size();i++) {
+      bulletObject b1 = bullets.get(i);
+      for(int j=0;j<bullets.size();j++) {
+        if(i!=j) {
+          bulletObject b2 = bullets.get(j);
+          if(b1.touch(b2)) {
+            bullets.remove(j);
+            println("bullet destory");
+          }
+        }
+      }
+    }
+    
+    for(int i=0;i<bullets.size();i++){
+      bulletObject b = bullets.get(i);
+      b.run();
+      for(int j=0;j<enemys.size()||b==null;j++){
+        actorObject e = enemys.get(j);
+        if(b!=null&&b.touch(e)) {
+          bullets.remove(i);
+//          enemys.remove(j);
+          i--;
+//          j--;
+//          println("touch!!");
+//          noLoop();         
+        }
+      }
+      if(b!=null) {
+        if(b.touch(player)){
+//          println("player lose");
+        }
+        if(b.outside()) {
+          bullets.remove(i);
+          i--;
+        }
+      }
+    }
   }
   
   public void keyTyped(){
     //debug mode
-    if(key=='t')
+    if(key=='T')
       player.changeMode(0);
-    if(key=='g')
+    if(key=='G')
       player.changeMode(1);
-    if(key=='y')
+    if(key=='Y')
       player.changeSpeed(1);
-    if(key=='h')
+    if(key=='H')
       player.changeSpeed(-1);
     //debug mode end
   }
@@ -59,28 +91,39 @@ public class game extends PApplet{
     //for(int i=0;i<keyEvents.size();i++)
       //keyEvents[i].control(key, true);
     player.control(key, true);
-    enemys.get(0).control(key, true);
+//    enemys.get(0).control(key, true);
   }
   public void keyReleased(){
     player.control(key, false);
-    enemys.get(0).control(key, false);
+//    enemys.get(0).control(key, false);
   }
   
   class actorObject{
+    private int hp = 1;
     private int weal;//weapon level
     private boolean stpd = false;//shotting key pressed
-    private int bulletLimit = 9, bulletCounter = 0;
+    private final int bulletLimitMax = 20;
+    private int bulletLimit = 20, bulletCounter = 0;
+    public PVector size = new PVector(20, 20);
             //, shottingDelay = 0;
-    PImage style;
+    PImage style = null;
     PVector pos = null,
             acc = new PVector(0,0,5);
     PVector dir = new PVector(0, -1);
+    actorObject(PImage style, PVector p){
+      this.style = style;
+      size = new PVector(style.width, style.height);
+      this.pos = p;
+    }
     actorObject(PVector p, PVector dir){
       this.dir = dir;
       this.pos = p;
     }
     actorObject(PVector p){
       this.pos = p;
+    }
+    public void setAtkSpeed(int speed) {
+      bulletLimit = speed;
     }
     public void run() {
       this.move();
@@ -99,27 +142,29 @@ public class game extends PApplet{
         this.pos.y+=this.acc.y;
     }
     public void display(){
-      fill(255);
-      stroke(255);
-      rect(pos.x-10, pos.y-10, 20, 20);
+      if(style!=null) {
+        float xResize = (float) (style.width*(acc.x==0?1:0.9));
+        image(style, this.pos.x-style.width/2, this.pos.y-style.height/2, xResize, style.height);
+        return;
+      }else{
+        fill(255);
+        stroke(255);
+        rect(pos.x-size.x/2, pos.y-size.y/2, size.x, size.y);
+      }
       //image(style, pos.y, pos.x);
     }
     public void control(char k, boolean pressed){
       switch(k){
-        case 'W':
-        case 'w':
+        case 'W':case 'w':
           acc.y =    (pressed?acc.z:0)*dir.y;
         break;
-        case 'A':
-        case 'a':
+        case 'A':case 'a':
           acc.x = -1*(pressed?acc.z:0);
         break;
-        case 'S':
-        case 's':
+        case 'S':case 's':
           acc.y = -1*(pressed?acc.z:0)*dir.y;
         break;
-        case 'D':
-        case 'd':
+        case 'D':case 'd':
           acc.x =    (pressed?acc.z:0);
         break;
         case ' ':
@@ -129,8 +174,13 @@ public class game extends PApplet{
       }
     }
     public void changeSpeed(int speed){
-      if(bulletLimit+speed>0&&bulletLimit+speed<10)
+      if(bulletLimit+speed>0&&bulletLimit+speed<=bulletLimitMax)
         bulletLimit+=speed;
+      else if(bulletLimit+speed<0)
+        bulletLimit = 1;
+      else if(bulletLimit+speed<0)
+        bulletLimit = bulletLimitMax;
+      println(bulletLimit);
     }
     public void changeMode(int mode){
       weal = mode;
@@ -144,24 +194,20 @@ public class game extends PApplet{
       if(bulletCounter!=0)
         return;
       if(weal==0){
-        bullets.add(
-            new bulletObject(
-              new PVector(this.pos.x-5, this.pos.y), 
-              new PVector(0, 20*dir.y)
-            )
-          );
-        bullets.add(
-            new bulletObject(
-              new PVector(this.pos.x+5, this.pos.y), 
-              new PVector(0, 20*dir.y)
-            )
-          );
+        for(int i=0;i<2;i++){
+          bullets.add(
+              new bulletObject(
+                new PVector(this.pos.x+size.x/2*(i==0?-1:1), this.pos.y+this.size.y/2*this.dir.y), 
+                new PVector(0, 20*dir.y)
+              )
+            );
+        }
       }
       if(weal==1) {
         for(int i=-2;i<3;i++)
           bullets.add(
             new bulletObject(
-              new PVector(this.pos.x, this.pos.y), 
+              new PVector(this.pos.x+size.x/6*i, this.pos.y+this.size.y/2*this.dir.y), 
               new PVector((float)1*i, 20*dir.y)
             )
           );
@@ -171,6 +217,7 @@ public class game extends PApplet{
   class bulletObject{
     PVector pos, acc;
     private int movingMode = 1;
+    private PVector size = new PVector(5, 5);
     public void basicSetup(PVector pos, PVector acc){this.pos = pos;this.acc = acc;}
     bulletObject(PVector pos, PVector acc, int mode){
       movingMode = mode;
@@ -179,7 +226,23 @@ public class game extends PApplet{
     bulletObject(PVector pos, PVector acc){
       basicSetup(pos, acc);
     }
-    public boolean touch(){
+    public boolean touch(actorObject a){
+//      float p1r = sqrt(pow(abs( pos.x-a.pos.x ), 2)+pow(abs( pos.y-a.pos.y ), 2)),
+//            p2r = sqrt(pow(abs( pos.x-(a.pos.x+a.size.x) ), 2)+pow(abs( pos.y-a.pos.y ), 2)),
+//            p3r = sqrt(pow(abs( pos.x-(a.pos.x+a.size.x) ), 2)+pow(abs( pos.y-(a.pos.y+a.size.y) ), 2)), 
+//            p4r = sqrt(pow(abs( pos.x-a.pos.x ), 2)+pow(abs( pos.y-(a.pos.y+a.size.y) ), 2));
+//      float pr  = sqrt( pow(size.x, 2) + pow(size.y, 2) )/2;
+//      if(p1r<=pr||p2r<=pr||p3r<=pr||p4r<=pr)
+      if(pos.x>=a.pos.x&&
+         pos.y>=a.pos.y&&
+         pos.x<=a.pos.x+a.size.x&&pos.y<=a.pos.y+a.size.y)
+          return true;
+      return false;
+    }
+    public boolean touch(bulletObject b){
+      float r  = sqrt( pow(pos.x-b.pos.x, 2) + pow(pos.y-b.pos.y, 2) );
+      if(r>=size.x+b.size.x&&r<=size.y+b.size.y)
+        return true;
       return false;
     }
     public void run(){
@@ -197,9 +260,9 @@ public class game extends PApplet{
       }
     }
     public void display() {
-      fill(255);
+      fill(255,200);
       stroke(255);
-      ellipse(this.pos.x, this.pos.y, 5, 5);
+      ellipse(this.pos.x, this.pos.y, size.x, size.y);
     }
     public boolean outside(){
       return this.pos.x>width||this.pos.y>height||this.pos.x<0||this.pos.y<0;
