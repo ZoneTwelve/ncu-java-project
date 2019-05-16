@@ -5,6 +5,7 @@ import java.util.ArrayList;
 //import java.awt.event.ActionListener;
 public class game extends PApplet{
   actorObject player;
+  public ArrayList<PImage> pimgpack = new ArrayList<PImage>();
   ArrayList<bulletObject> bullets = new ArrayList<bulletObject>();
   ArrayList<actorObject>  enemys  = new ArrayList<actorObject>();
   //ArrayList keyEvents = new ArrayList();
@@ -13,22 +14,33 @@ public class game extends PApplet{
   }
   public void settings(){
     //fullScreen();
-    size(600, 600);
+    size(900, 900);
   }
 
   public void setup(){
-    PImage playerStyle = loadImage("images/player.png");
+    PImage playerStyle = loadImage("images/player2.png");
     player = new actorObject(playerStyle, new PVector(width/2, height/2));
     enemys.add(new actorObject(new PVector(200, 50), new PVector(0, 1)));
     actorObject e1 = enemys.get(0);
     e1.control(' ', true);
     e1.setAtkSpeed(50);
+    for(int i=0;i<20;i++) {
+      actorObject enemy = new actorObject(new PVector(random(0, 600), random(0, 200)), new PVector(0, 1));
+      enemy.setAtkSpeed((int)random(40, 50));
+      enemy.control(' ', true);
+      enemys.add(enemy);
+    }
     //keyEvents.add(player);
   }
-
   public void draw(){
     background(51);
     gameing();
+    if(enemys.size()<10) {
+      actorObject enemy = new actorObject(new PVector(random(0, 600), random(0, 200)), new PVector(0, 1));
+      enemy.setAtkSpeed(50);
+      enemy.control(' ', true);
+      enemys.add(enemy);
+    }
   }
   
   public void gameing(){
@@ -36,29 +48,17 @@ public class game extends PApplet{
     for(int i=0;i<enemys.size();i++) {
       enemys.get(i).run();
     }
-    for(int i=0;i<bullets.size();i++) {
-      bulletObject b1 = bullets.get(i);
-      for(int j=0;j<bullets.size();j++) {
-        if(i!=j) {
-          bulletObject b2 = bullets.get(j);
-          if(b1.touch(b2)) {
-            bullets.remove(j);
-            println("bullet destory");
-          }
-        }
-      }
-    }
     
     for(int i=0;i<bullets.size();i++){
       bulletObject b = bullets.get(i);
       b.run();
       for(int j=0;j<enemys.size()||b==null;j++){
         actorObject e = enemys.get(j);
-        if(b!=null&&b.touch(e)) {
+        if(b!=null&&b.touch(e)&&b.acc.y<0) {
           bullets.remove(i);
-//          enemys.remove(j);
+          enemys.remove(j);
+          j--;
           i--;
-//          j--;
 //          println("touch!!");
 //          noLoop();         
         }
@@ -72,7 +72,9 @@ public class game extends PApplet{
           i--;
         }
       }
+      
     }
+
   }
   
   public void keyTyped(){
@@ -86,6 +88,10 @@ public class game extends PApplet{
     if(key=='H')
       player.changeSpeed(-1);
     //debug mode end
+  }
+  
+  public void mousePressed(){
+    
   }
   public void keyPressed(){
     //for(int i=0;i<keyEvents.size();i++)
@@ -104,6 +110,7 @@ public class game extends PApplet{
     private boolean stpd = false;//shotting key pressed
     private final int bulletLimitMax = 20;
     private int bulletLimit = 20, bulletCounter = 0;
+    private int animationCounter = 0, animationMode = 0;
     public PVector size = new PVector(20, 20);
             //, shottingDelay = 0;
     PImage style = null;
@@ -128,11 +135,19 @@ public class game extends PApplet{
     public void run() {
       this.move();
       this.display();
+      this.animation();
       if(stpd)
 //        for(int i=0;i<10;i++)
         this.shooting();
 //      if(bulletCounter>0)
 //        bulletCounter--;
+    }
+    public void animation(){
+      if(animationCounter!=0&&animationMode==0){
+        animationCounter = 0;
+      }else if(animationMode==1){//explostion
+        
+      }
     }
     public void move(){
       float x = this.pos.x+this.acc.x, y = this.pos.y+this.acc.y;
