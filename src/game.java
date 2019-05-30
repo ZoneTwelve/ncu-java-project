@@ -29,14 +29,15 @@ public class game extends PApplet{
     pimgpack.add(loadImage("images/main-page.png"));//0
     PImage playerStyle = loadImage("images/player.png");
     player = new actorObject(playerStyle, new PVector(width/2, height/2));
-    enemys.add(new actorObject(new PVector(200, 50), new PVector(0, 1)));
-    actorObject e1 = enemys.get(0);
-    e1.control(' ', true);
-    e1.setAtkSpeed(50);
-    for(int i=0;i<20;i++) {
-      actorObject enemy = new actorObject(new PVector(random(0, 600), random(0, 200)), new PVector(0, 1));
+//    enemys.add(new actorObject(new PVector(200, 50), new PVector(0, 1)));
+//    actorObject e1 = enemys.get(0);
+//    e1.control(' ', true);
+//    e1.setAtkSpeed(50);
+    for(int i=0;i<3;i++) {
+      actorObject enemy = new actorObject(new PVector(random(0, width), 0), new PVector(0, 1));
       enemy.setAtkSpeed((int)random(40, 50));
       enemy.control(' ', true);
+      enemy.randomWalk(true);
       enemys.add(enemy);
     }
     int p = height/10*4;
@@ -50,38 +51,13 @@ public class game extends PApplet{
     pauseBtn[0x2] = new buttonObject(new PVector(width/2, p-=sw+20), "Main",   new PVector(100, sw, 24), new Color("#ffffff"), new Color("#FF4500"));
     pauseBtn[0x1] = new buttonObject(new PVector(width/2, p-=sw+20), "Grade", new PVector(100, sw, 24), new Color("#FFFFFF"), new Color("#1F00AF"));
     pauseBtn[0x0] = new buttonObject(new PVector(width/2, p-=sw+20), "Continue",   new PVector(100, sw, 24), new Color("#FFFFFF"), new Color("#006620"));
-    
-//    menuBtn[(height%p+p%width)>>10].actionEvent(new ActionListener(){
-//      @Override
-//      public void actionPerformed(ActionEvent e) {
-//        player.changeMode(1);
-//        player.setAtkSpeed(5);
-//      }
-//    });
-//    menuBtn[(width%p)>>8].actionEvent(new ActionListener(){
-//      @Override
-//      public void actionPerformed(ActionEvent e) {
-//        player.setAtkSpeed(5);
-//      }
-//    });
-//    menuBtn[(p%6)>>1].actionEvent(new ActionListener(){
-//      @Override
-//      public void actionPerformed(ActionEvent e) {
-//        player.changeMode(0);
-//      }
-//    });
-//    menuBtn[(p>>6)%5].actionEvent(new ActionListener(){
-//      @Override
-//      public void actionPerformed(ActionEvent e) {
-//        exit();
-//      }
-//    });
+
     //keyEvents.add(player);
   }
   public void draw(){
     background(51);
     textSize(24);
-    if(!lock&&keyPressed&&key=='k'){
+    if(!lock&&keyPressed&&key=='k'&&level!=0){
       pause = !pause;
       lock = true;
     }else if(lock&&!keyPressed)
@@ -98,20 +74,9 @@ public class game extends PApplet{
         break;
       }      
     }
-    
-//    gameing();
-//    if(enemys.size()<10) {
-//      actorObject enemy = new actorObject(new PVector(random(0, 600), random(0, 200)), new PVector(0, 1));
-//      enemy.setAtkSpeed(50);
-//      enemy.control(' ', true);
-//      enemys.add(enemy);
-//    }
   }
   
   public void pauseMenu(){
-//    String msg = "Welcome...";
-//    fill(255);
-//    text(msg, width/2-textWidth(msg)/2, (float)(height*0.2));
     for(buttonObject btn : pauseBtn) {
       boolean s = btn.run();
       if(s){
@@ -225,8 +190,9 @@ public class game extends PApplet{
   }
   
   class actorObject{
-    private boolean ranMove = false;
-    private int hp = 1;
+    private boolean radnomWalker = false;
+//    private boolean ranMove = false;
+//    private int hp = 1;
     private int weal;//weapon level
     private boolean stpd = false;//shotting key pressed
     private final int bulletLimitMax = 20;
@@ -260,6 +226,10 @@ public class game extends PApplet{
       this.move();
       this.display();
       this.animation();
+      if(radnomWalker){
+        pos.y+=random(-1,5);
+      }
+        
       if(stpd)
         this.shooting();
 //      if(bulletCounter>0)
@@ -274,7 +244,7 @@ public class game extends PApplet{
     }
     
     public void randomWalk(boolean status){
-      this.ranMove = status;
+      this.radnomWalker = status;
     }
     
     public void move(){
