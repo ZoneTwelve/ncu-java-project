@@ -3,16 +3,19 @@ import processing.core.*;
 //import processing.core.PImage;
 
 import java.util.ArrayList;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+//import java.awt.event.ActionEvent;
+//import java.awt.event.ActionListener;
 
 public class game extends PApplet{
+  boolean lock = false;
   static int level = 0;
+  static boolean pause = false;
   actorObject player;
   public ArrayList<PImage> pimgpack = new ArrayList<PImage>();
   ArrayList<bulletObject> bullets = new ArrayList<bulletObject>();
   ArrayList<actorObject>  enemys  = new ArrayList<actorObject>();
   buttonObject menuBtn[] = new buttonObject[4];
+  buttonObject pauseBtn[] = new buttonObject[4];
   //ArrayList keyEvents = new ArrayList();
   public static void main(String[] args) {
       PApplet.main("game");
@@ -23,6 +26,7 @@ public class game extends PApplet{
   }
 
   public void setup(){
+    pimgpack.add(loadImage("images/main-page.png"));//0
     PImage playerStyle = loadImage("images/player.png");
     player = new actorObject(playerStyle, new PVector(width/2, height/2));
     enemys.add(new actorObject(new PVector(200, 50), new PVector(0, 1)));
@@ -41,6 +45,12 @@ public class game extends PApplet{
     menuBtn[0x1] = new buttonObject(new PVector(width/2, p+=sw+10), "Normal", new PVector(100, sw, 24), new Color("#FFFFFF"), new Color("#1F00AF"));
     menuBtn[0x2] = new buttonObject(new PVector(width/2, p+=sw+10), "Hard",   new PVector(100, sw, 24), new Color("#ffffff"), new Color("#FF4500"));
     menuBtn[0x3] = new buttonObject(new PVector(width/2, p+=sw+10), "Exit",   new PVector(100, sw, 24), new Color("#FF0000"), new Color("#D40000"));
+    
+    pauseBtn[0x3] = new buttonObject(new PVector(width/2, p-=sw+20), "Exit",   new PVector(100, sw, 24), new Color("#FF0000"), new Color("#D40000"));
+    pauseBtn[0x2] = new buttonObject(new PVector(width/2, p-=sw+20), "Main",   new PVector(100, sw, 24), new Color("#ffffff"), new Color("#FF4500"));
+    pauseBtn[0x1] = new buttonObject(new PVector(width/2, p-=sw+20), "Grade", new PVector(100, sw, 24), new Color("#FFFFFF"), new Color("#1F00AF"));
+    pauseBtn[0x0] = new buttonObject(new PVector(width/2, p-=sw+20), "Continue",   new PVector(100, sw, 24), new Color("#FFFFFF"), new Color("#006620"));
+    
 //    menuBtn[(height%p+p%width)>>10].actionEvent(new ActionListener(){
 //      @Override
 //      public void actionPerformed(ActionEvent e) {
@@ -71,13 +81,22 @@ public class game extends PApplet{
   public void draw(){
     background(51);
     textSize(24);
-    switch(level) {
-      case 0:
-        startmenu();
-      break;
-      case 1:
-        gameing();
-      break;
+    if(!lock&&keyPressed&&key=='k'){
+      pause = !pause;
+      lock = true;
+    }else if(lock&&!keyPressed)
+      lock = false;
+    if(pause){
+      pauseMenu();
+    }else {
+      switch(level) {
+        case 0:
+          startMenu();
+        break;
+        case 1:
+          gameing();
+        break;
+      }      
     }
     
 //    gameing();
@@ -88,11 +107,41 @@ public class game extends PApplet{
 //      enemys.add(enemy);
 //    }
   }
-
-  public void startmenu(){
-    String msg = "Welcome...";
-    fill(255);
-    text(msg, width/2-textWidth(msg)/2, (float)(height*0.2));
+  
+  public void pauseMenu(){
+//    String msg = "Welcome...";
+//    fill(255);
+//    text(msg, width/2-textWidth(msg)/2, (float)(height*0.2));
+    for(buttonObject btn : pauseBtn) {
+      boolean s = btn.run();
+      if(s){
+        switch(btn.msg) {
+          case "Hard":
+            player.changeMode(0);
+          break;
+          case "Normal":
+            player.changeMode(1);
+          break;
+          case "Easy":
+            player.changeMode(1);
+            player.setAtkSpeed(5);
+          break;
+          case "Exit":
+            exit();
+          break;
+        }
+        level++;
+        println(btn.msg);
+      }
+    }
+  }
+  
+  public void startMenu(){
+    PImage bg = pimgpack.get(0);
+    image(bg, 0, 0, width, height);
+//    String msg = "Welcome...";
+//    fill(255);
+//    text(msg, width/2-textWidth(msg)/2, (float)(height*0.2));
     for(buttonObject btn : menuBtn) {
       boolean s = btn.run();
       if(s){
@@ -274,7 +323,7 @@ public class game extends PApplet{
         bulletLimit = 1;
       else if(bulletLimit+speed<0)
         bulletLimit = bulletLimitMax;
-      println(bulletLimit);
+//      println(bulletLimit);
     }
     public void changeMode(int mode){
       weal = mode;
@@ -367,7 +416,7 @@ public class game extends PApplet{
     Color normal = new Color(255), hover = new Color(51);
     //size = new PVector(width, height, fontSize);
     String msg;
-    ActionListener func;
+//    ActionListener func;
     buttonObject(PVector pos, String msg){
       setup(pos, msg, new PVector(textWidth(msg), 20, 16));
     }
