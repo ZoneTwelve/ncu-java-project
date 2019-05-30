@@ -37,10 +37,10 @@ public class game extends PApplet{
     }
     int p = height/10*4;
     int sw = 36;
-    menuBtn[0x0] = new buttonObject(new PVector(width/2, p+=sw+10), "Easy",   new PVector(100, sw, 24));
-    menuBtn[0x1] = new buttonObject(new PVector(width/2, p+=sw+10), "Normal", new PVector(100, sw, 24));
-    menuBtn[0x2] = new buttonObject(new PVector(width/2, p+=sw+10), "Hard",   new PVector(100, sw, 24));
-    menuBtn[0x3] = new buttonObject(new PVector(width/2, p+=sw+10), "Exit",   new PVector(100, sw, 24), new Color("#e51400"), new Color("#e5af00"));
+    menuBtn[0x0] = new buttonObject(new PVector(width/2, p+=sw+10), "Easy",   new PVector(100, sw, 24), new Color("#FFFFFF"), new Color("#006620"));
+    menuBtn[0x1] = new buttonObject(new PVector(width/2, p+=sw+10), "Normal", new PVector(100, sw, 24), new Color("#FFFFFF"), new Color("#1F00AF"));
+    menuBtn[0x2] = new buttonObject(new PVector(width/2, p+=sw+10), "Hard",   new PVector(100, sw, 24), new Color("#ffffff"), new Color("#FF4500"));
+    menuBtn[0x3] = new buttonObject(new PVector(width/2, p+=sw+10), "Exit",   new PVector(100, sw, 24), new Color("#FF0000"), new Color("#D40000"));
 //    menuBtn[(height%p+p%width)>>10].actionEvent(new ActionListener(){
 //      @Override
 //      public void actionPerformed(ActionEvent e) {
