@@ -1,13 +1,18 @@
-import processing.core.PApplet;
-import processing.core.PVector;
-import processing.core.PImage;
+import processing.core.*;
+//import processing.core.PVector;
+//import processing.core.PImage;
+
 import java.util.ArrayList;
-//import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
 public class game extends PApplet{
+  static int level = 0;
   actorObject player;
   public ArrayList<PImage> pimgpack = new ArrayList<PImage>();
   ArrayList<bulletObject> bullets = new ArrayList<bulletObject>();
   ArrayList<actorObject>  enemys  = new ArrayList<actorObject>();
+  buttonObject menuBtn[] = new buttonObject[4];
   //ArrayList keyEvents = new ArrayList();
   public static void main(String[] args) {
       PApplet.main("game");
@@ -18,7 +23,7 @@ public class game extends PApplet{
   }
 
   public void setup(){
-    PImage playerStyle = loadImage("images/player2.png");
+    PImage playerStyle = loadImage("images/player.png");
     player = new actorObject(playerStyle, new PVector(width/2, height/2));
     enemys.add(new actorObject(new PVector(200, 50), new PVector(0, 1)));
     actorObject e1 = enemys.get(0);
@@ -30,16 +35,85 @@ public class game extends PApplet{
       enemy.control(' ', true);
       enemys.add(enemy);
     }
+    int p = height/10*4;
+    int sw = 36;
+    menuBtn[0x0] = new buttonObject(new PVector(width/2, p+=sw+10), "Easy",   new PVector(100, sw, 24));
+    menuBtn[0x1] = new buttonObject(new PVector(width/2, p+=sw+10), "Normal", new PVector(100, sw, 24));
+    menuBtn[0x2] = new buttonObject(new PVector(width/2, p+=sw+10), "Hard",   new PVector(100, sw, 24));
+    menuBtn[0x3] = new buttonObject(new PVector(width/2, p+=sw+10), "Exit",   new PVector(100, sw, 24), new Color("#e51400"), new Color("#e5af00"));
+//    menuBtn[(height%p+p%width)>>10].actionEvent(new ActionListener(){
+//      @Override
+//      public void actionPerformed(ActionEvent e) {
+//        player.changeMode(1);
+//        player.setAtkSpeed(5);
+//      }
+//    });
+//    menuBtn[(width%p)>>8].actionEvent(new ActionListener(){
+//      @Override
+//      public void actionPerformed(ActionEvent e) {
+//        player.setAtkSpeed(5);
+//      }
+//    });
+//    menuBtn[(p%6)>>1].actionEvent(new ActionListener(){
+//      @Override
+//      public void actionPerformed(ActionEvent e) {
+//        player.changeMode(0);
+//      }
+//    });
+//    menuBtn[(p>>6)%5].actionEvent(new ActionListener(){
+//      @Override
+//      public void actionPerformed(ActionEvent e) {
+//        exit();
+//      }
+//    });
     //keyEvents.add(player);
   }
   public void draw(){
     background(51);
-    gameing();
-    if(enemys.size()<10) {
-      actorObject enemy = new actorObject(new PVector(random(0, 600), random(0, 200)), new PVector(0, 1));
-      enemy.setAtkSpeed(50);
-      enemy.control(' ', true);
-      enemys.add(enemy);
+    textSize(24);
+    switch(level) {
+      case 0:
+        startmenu();
+      break;
+      case 1:
+        gameing();
+      break;
+    }
+    
+//    gameing();
+//    if(enemys.size()<10) {
+//      actorObject enemy = new actorObject(new PVector(random(0, 600), random(0, 200)), new PVector(0, 1));
+//      enemy.setAtkSpeed(50);
+//      enemy.control(' ', true);
+//      enemys.add(enemy);
+//    }
+  }
+
+  public void startmenu(){
+    String msg = "Welcome...";
+    fill(255);
+    text(msg, width/2-textWidth(msg)/2, (float)(height*0.2));
+    for(buttonObject btn : menuBtn) {
+      boolean s = btn.run();
+      if(s){
+        switch(btn.msg) {
+          case "Hard":
+            player.changeMode(0);
+          break;
+          case "Normal":
+            player.changeMode(1);
+          break;
+          case "Easy":
+            player.changeMode(1);
+            player.setAtkSpeed(5);
+          break;
+          case "Exit":
+            exit();
+          break;
+        }
+        level++;
+        println(btn.msg);
+      }
     }
   }
   
@@ -59,13 +133,10 @@ public class game extends PApplet{
           enemys.remove(j);
           j--;
           i--;
-//          println("touch!!");
-//          noLoop();         
         }
       }
       if(b!=null) {
         if(b.touch(player)){
-//          println("player lose");
         }
         if(b.outside()) {
           bullets.remove(i);
@@ -105,6 +176,7 @@ public class game extends PApplet{
   }
   
   class actorObject{
+    private boolean ranMove = false;
     private int hp = 1;
     private int weal;//weapon level
     private boolean stpd = false;//shotting key pressed
@@ -119,7 +191,10 @@ public class game extends PApplet{
     PVector dir = new PVector(0, -1);
     actorObject(PImage style, PVector p){
       this.style = style;
-      size = new PVector(style.width, style.height);
+      size = new PVector(
+        map(40, 0, style.width, 0, 800),
+        map(100, 0, style.height, 0, 800)
+      );
       this.pos = p;
     }
     actorObject(PVector p, PVector dir){
@@ -137,7 +212,6 @@ public class game extends PApplet{
       this.display();
       this.animation();
       if(stpd)
-//        for(int i=0;i<10;i++)
         this.shooting();
 //      if(bulletCounter>0)
 //        bulletCounter--;
@@ -149,6 +223,11 @@ public class game extends PApplet{
         
       }
     }
+    
+    public void randomWalk(boolean status){
+      this.ranMove = status;
+    }
+    
     public void move(){
       float x = this.pos.x+this.acc.x, y = this.pos.y+this.acc.y;
       if(x>0&&x<width)
@@ -158,8 +237,8 @@ public class game extends PApplet{
     }
     public void display(){
       if(style!=null) {
-        float xResize = (float) (style.width*(acc.x==0?1:0.9));
-        image(style, this.pos.x-style.width/2, this.pos.y-style.height/2, xResize, style.height);
+        float xResize = (float) (size.x*(acc.x==0?1:0.9));
+        image(style, this.pos.x-size.x/2, this.pos.y-size.y/2, xResize, size.y);
         return;
       }else{
         fill(255);
@@ -283,4 +362,70 @@ public class game extends PApplet{
       return this.pos.x>width||this.pos.y>height||this.pos.x<0||this.pos.y<0;
     }
   }
+  class buttonObject{
+    PVector pos, size;
+    Color normal = new Color(255), hover = new Color(51);
+    //size = new PVector(width, height, fontSize);
+    String msg;
+    ActionListener func;
+    buttonObject(PVector pos, String msg){
+      setup(pos, msg, new PVector(textWidth(msg), 20, 16));
+    }
+    public buttonObject(PVector pos, String msg, PVector size) {
+      setup(pos, msg, size);
+    }
+    public buttonObject(PVector pos, String msg, PVector size, Color n, Color h){
+      setup(pos, msg, size);
+      normal = n;
+      hover  = h;
+    }
+    private void setup(PVector pos, String msg, PVector size){
+      this.msg = msg;
+      this.pos = pos;
+      this.size = size;
+    }
+    public boolean run(){
+      boolean mouseOver = mouseX>=pos.x-size.x/2&&mouseY>pos.y-size.y/2&&mouseX<=pos.x+size.x/2&&mouseY<=pos.y+size.y/2;
+      this.display(mouseOver?hover:normal);
+      return mouseOver&&mousePressed;
+    }
+    public void actionEvent(ActionListener e) {func = e;}
+    public void display(Color c){
+//      fill(normal.r, normal.g, normal.b);
+//      stroke(normal.r, normal.g, normal.b);
+      fill(c.r, c.g, c.b);
+      stroke(c.r, c.g, c.b);
+      float x = pos.x-size.x/2, y = pos.y-size.y/2;
+      rect(x, y, size.x, size.y);
+//      fill(hover.r, hover.g, hover.b);
+//      stroke(hover.r, hover.g, hover.b);
+      fill(abs(255-c.r), abs(255-c.g), abs(255-c.b));
+      stroke(abs(255-c.r), abs(255-c.g), abs(255-c.b));
+      textSize(size.z);
+      text(this.msg, pos.x-textWidth(msg)/2, y+size.z);
+    }
+  }
+  class Color{
+    int r,g,b;
+    float a;
+    Color(String code){
+      int r = Integer.parseInt(code.substring(1, 3), 16),
+          g = Integer.parseInt(code.substring(3, 5), 16),
+          b = Integer.parseInt(code.substring(5, 7), 16);
+      setup(r,g,b, 1f);
+    }
+    Color(int r){setup(r,r,r,1);}
+    Color(int r, int g){setup(r,g,g,1);}
+    Color(int r, int g, int b){setup(r,g,b,1);}
+    Color(int r, int g, int b, float a){setup(r,g,b,a);}
+    public void setup(int r, int g, int b, float a) {
+      this.r = r;
+      this.g = g;
+      this.b = b;
+      this.a = a;
+    }
+  }
+//  class sizeObject{
+//    int width, height;
+//  }
 }
