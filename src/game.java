@@ -11,11 +11,20 @@ public class game extends PApplet{
   static int level = 0;
   static boolean pause = false;
   actorObject player;
+  static backgroundSystem mainbg = null;
   public ArrayList<PImage> pimgpack = new ArrayList<PImage>();
   ArrayList<bulletObject> bullets = new ArrayList<bulletObject>();
   ArrayList<actorObject>  enemys  = new ArrayList<actorObject>();
-  buttonObject menuBtn[] = new buttonObject[4];
+  buttonObject menuBtn[] = new buttonObject[5];
   buttonObject pauseBtn[] = new buttonObject[4];
+  int levelDelay = 250;
+  int levelCount;
+  int generateCount = 0;
+  int generatePoint = -1;
+  int randomPoint[] = new int[20];
+  int enemyLimit = 0;
+  
+  int grade[] = new int[10];
   //ArrayList keyEvents = new ArrayList();
   public static void main(String[] args) {
       PApplet.main("game");
@@ -33,29 +42,37 @@ public class game extends PApplet{
 //    actorObject e1 = enemys.get(0);
 //    e1.control(' ', true);
 //    e1.setAtkSpeed(50);
-    for(int i=0;i<3;i++) {
+    for(int i=0;i<randomPoint.length;i++) {
+      randomPoint[i] = (int) random(width/10, width*9/10);
+      println(randomPoint[i]);
+    }
+    for(int i=0;i<3&&false;i++) {
       actorObject enemy = new actorObject(new PVector(random(0, width), 0), new PVector(0, 1));
       enemy.setAtkSpeed((int)random(40, 50));
       enemy.control(' ', true);
       enemy.randomWalk(true);
       enemys.add(enemy);
     }
+    levelCount = 0;
     int p = height/10*4;
-    int sw = 36;
-    menuBtn[0x0] = new buttonObject(new PVector(width/2, p+=sw+10), "Easy",   new PVector(100, sw, 24), new Color("#FFFFFF"), new Color("#006620"));
-    menuBtn[0x1] = new buttonObject(new PVector(width/2, p+=sw+10), "Normal", new PVector(100, sw, 24), new Color("#FFFFFF"), new Color("#1F00AF"));
-    menuBtn[0x2] = new buttonObject(new PVector(width/2, p+=sw+10), "Hard",   new PVector(100, sw, 24), new Color("#ffffff"), new Color("#FF4500"));
-    menuBtn[0x3] = new buttonObject(new PVector(width/2, p+=sw+10), "Exit",   new PVector(100, sw, 24), new Color("#FF0000"), new Color("#D40000"));
-    
-    pauseBtn[0x3] = new buttonObject(new PVector(width/2, p-=sw+20), "Exit",   new PVector(100, sw, 24), new Color("#FF0000"), new Color("#D40000"));
-    pauseBtn[0x2] = new buttonObject(new PVector(width/2, p-=sw+20), "Main",   new PVector(100, sw, 24), new Color("#ffffff"), new Color("#FF4500"));
-    pauseBtn[0x1] = new buttonObject(new PVector(width/2, p-=sw+20), "Grade", new PVector(100, sw, 24), new Color("#FFFFFF"), new Color("#1F00AF"));
-    pauseBtn[0x0] = new buttonObject(new PVector(width/2, p-=sw+20), "Continue",   new PVector(100, sw, 24), new Color("#FFFFFF"), new Color("#006620"));
-
+    int sw = 60;
+    menuBtn[0x0] = new buttonObject(new PVector(width/2, p+=sw+(sw/10)), "Easy",    new PVector(sw*3, sw, 48), new Color("#FFFFFF"), new Color("#006620"));
+    menuBtn[0x1] = new buttonObject(new PVector(width/2, p+=sw+(sw/10)), "Normal",  new PVector(sw*3, sw, 48), new Color("#FFFFFF"), new Color("#1F00AF"));
+    menuBtn[0x2] = new buttonObject(new PVector(width/2, p+=sw+(sw/10)), "Hard",    new PVector(sw*3, sw, 48), new Color("#ffffff"), new Color("#FF4500"));
+    menuBtn[0x3] = new buttonObject(new PVector(width/2, p+=sw+(sw/10)), "Grade",   new PVector(sw*3, sw, 48));
+    menuBtn[0x4] = new buttonObject(new PVector(width/2, p+=sw+(sw/10)), "Exit",    new PVector(sw*3, sw, 48), new Color("#FF0000"), new Color("#D40000"));
+    p = height/10*4;
+    pauseBtn[0x0] = new buttonObject(new PVector(width/2, p+=sw+(sw/10)), "Continue",   new PVector(100, sw, 24), new Color("#FFFFFF"), new Color("#006620"));
+    pauseBtn[0x1] = new buttonObject(new PVector(width/2, p+=sw+(sw/10)), "Grade",      new PVector(100, sw, 24), new Color("#FFFFFF"), new Color("#1F00AF"));
+    pauseBtn[0x2] = new buttonObject(new PVector(width/2, p+=sw+(sw/10)), "Main",       new PVector(100, sw, 24), new Color("#ffffff"), new Color("#FF4500"));
+    pauseBtn[0x3] = new buttonObject(new PVector(width/2, p+=sw+(sw/10)), "Exit",       new PVector(100, sw, 24), new Color("#FF0000"), new Color("#D40000"));
+    PImage test = loadImage("images/game-bg.png");
+    PImage mainbglist[] = {test, test};
+    mainbg = new backgroundSystem(mainbglist);
     //keyEvents.add(player);
   }
   public void draw(){
-    background(51);
+    background(0);
     textSize(24);
     if(!lock&&keyPressed&&key=='k'&&level!=0){
       pause = !pause;
@@ -72,6 +89,9 @@ public class game extends PApplet{
         case 1:
           gameing();
         break;
+        case 99:
+          gradeList();
+        break;
       }      
     }
   }
@@ -81,29 +101,27 @@ public class game extends PApplet{
       boolean s = btn.run();
       if(s){
         switch(btn.msg) {
-          case "Hard":
-            player.changeMode(0);
+          case "Continue":
+            pause = false;
           break;
-          case "Normal":
-            player.changeMode(1);
+          case "Main":
+            //故意不reset Game
+            level = 0;
           break;
-          case "Easy":
-            player.changeMode(1);
-            player.setAtkSpeed(5);
+          case "Grade":
+            while(gradeList());
           break;
           case "Exit":
             exit();
           break;
         }
-        level++;
-        println(btn.msg);
       }
     }
   }
-  
   public void startMenu(){
-    PImage bg = pimgpack.get(0);
-    image(bg, 0, 0, width, height);
+    image(pimgpack.get(0), 0, 0, width, height);
+//    PImage bg = pimgpack.get(0);
+//    image(bg, 0, 0, width, height);
 //    String msg = "Welcome...";
 //    fill(255);
 //    text(msg, width/2-textWidth(msg)/2, (float)(height*0.2));
@@ -112,29 +130,65 @@ public class game extends PApplet{
       if(s){
         switch(btn.msg) {
           case "Hard":
+            enemyLimit = 30;
             player.changeMode(0);
+            player.setAtkSpeed(25);
+            levelDelay = 100;
+            level++;
           break;
           case "Normal":
+            enemyLimit = 20;
             player.changeMode(1);
+            player.setAtkSpeed(15);
+            levelDelay = 150;
+            level++;
           break;
           case "Easy":
+            enemyLimit = 10;
             player.changeMode(1);
             player.setAtkSpeed(5);
+            levelDelay = 250;
+            level++;
+          break;
+          case "Grade":
+            level = 99;
           break;
           case "Exit":
             exit();
           break;
         }
-        level++;
-        println(btn.msg);
       }
     }
   }
   
   public void gameing(){
+//    mainbg.display();
     player.run();
+    levelCount = (levelCount+1+((enemyLimit-enemys.size())/10))%levelDelay;
+    println(levelCount);
+    if(levelCount==0) {
+      generateCount = (int)random(enemyLimit/2, enemyLimit);
+      generatePoint = (int)random(0, randomPoint.length);
+    }
+//    println(levelCount);
+    if(generateCount!=0&&levelCount%20==0){
+//      for(int i=0;i<random(10, 20);i++){
+        actorObject enemy = new actorObject(new PVector(randomPoint[generatePoint], 0), new PVector(0, 1));
+//        println(enemy.pos);
+        enemy.setAtkSpeed((int)random(40+enemyLimit, 50+enemyLimit));
+        enemy.control(' ', true);
+        enemy.randomWalk(true);
+        enemys.add(enemy);
+//      }
+      generateCount--;
+    }
+
     for(int i=0;i<enemys.size();i++) {
       enemys.get(i).run();
+      if(enemys.get(i).pos.y>height) {
+        enemys.remove(i);
+        i--;
+      }
     }
     
     for(int i=0;i<bullets.size();i++){
@@ -151,15 +205,21 @@ public class game extends PApplet{
       }
       if(b!=null) {
         if(b.touch(player)){
+          enemys = new ArrayList<actorObject>();
+          bullets = new ArrayList<bulletObject>();
+          level = 0;
         }
-        if(b.outside()) {
+        if(b.outside()&&bullets.size()>0) {
+//          println(i+" "+bullets.size());
           bullets.remove(i);
           i--;
         }
       }
-      
     }
-
+  }
+  
+  public boolean gradeList(){
+    return true;
   }
   
   public void keyTyped(){
@@ -204,6 +264,7 @@ public class game extends PApplet{
     PVector pos = null,
             acc = new PVector(0,0,5);
     PVector dir = new PVector(0, -1);
+    float ranwalk = 0;
     actorObject(PImage style, PVector p){
       this.style = style;
       size = new PVector(
@@ -227,7 +288,10 @@ public class game extends PApplet{
       this.display();
       this.animation();
       if(radnomWalker){
-        pos.y+=random(-1,5);
+        float s = 2*sin(PI/100*(ranwalk++));
+//        println(s);
+        pos.x+=s+random(-1, 1);
+        pos.y+=random(1,2);
       }
         
       if(stpd)
@@ -408,7 +472,6 @@ public class game extends PApplet{
       this.display(mouseOver?hover:normal);
       return mouseOver&&mousePressed;
     }
-    public void actionEvent(ActionListener e) {func = e;}
     public void display(Color c){
 //      fill(normal.r, normal.g, normal.b);
 //      stroke(normal.r, normal.g, normal.b);
@@ -442,6 +505,23 @@ public class game extends PApplet{
       this.g = g;
       this.b = b;
       this.a = a;
+    }
+  }
+  class backgroundSystem{
+    PImage bgs[] = null;
+    int index = 0;
+    PVector pos = new PVector(), dir = new PVector(0, 1);
+    //background image array
+    backgroundSystem(PImage bga[]){this.bgs = bga;}
+    public void scoll(PVector d){this.dir = d;}
+    public void display(){
+      PImage a = bgs[index%bgs.length];
+      PImage b = bgs[(index+1)%bgs.length];
+      index = (index+1)%bgs.length;
+      image(a, pos.x, pos.y, width, height);
+      this.pos.x = (this.pos.x+this.dir.x)%height;
+      this.pos.y = (this.pos.y+this.dir.y)%height;
+      image(b, pos.x, pos.y-height, width, height);
     }
   }
 //  class sizeObject{
