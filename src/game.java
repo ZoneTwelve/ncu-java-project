@@ -38,13 +38,14 @@ public class game extends PApplet{
     pimgpack.add(loadImage("images/main-page.png"));//0
     PImage playerStyle = loadImage("images/player.png");
     player = new actorObject(playerStyle, new PVector(width/2, height/2));
+    player.setBulletSpeed(20);
 //    enemys.add(new actorObject(new PVector(200, 50), new PVector(0, 1)));
 //    actorObject e1 = enemys.get(0);
 //    e1.control(' ', true);
 //    e1.setAtkSpeed(50);
     for(int i=0;i<randomPoint.length;i++) {
       randomPoint[i] = (int) random(width/5, width/10*8);
-      println(randomPoint[i]);
+//      println(randomPoint[i]);
     }
     for(int i=0;i<3&&false;i++) {
       actorObject enemy = new actorObject(new PVector(random(width/5, width/10*8), 0), new PVector(0, 1));
@@ -139,14 +140,14 @@ public class game extends PApplet{
           case "Normal":
             enemyLimit = 20;
             player.changeMode(1);
-            player.setAtkSpeed(15);
+            player.setAtkSpeed(20);
             levelDelay = 150;
             level++;
           break;
           case "Easy":
             enemyLimit = 10;
             player.changeMode(1);
-            player.setAtkSpeed(5);
+            player.setAtkSpeed(3);
             levelDelay = 250;
             level++;
           break;
@@ -166,9 +167,9 @@ public class game extends PApplet{
     player.run();
     levelCount = (levelCount+1)%levelDelay;
     if(levelCount%20==0)
-    println(levelCount);
+//    println(levelCount);
     if(levelCount==0) {
-      println("generate");
+//      println("generate");
       if(levelDelay<150) {
         levelDelay+=50;
       }else if(levelDelay>250) {
@@ -182,6 +183,8 @@ public class game extends PApplet{
 //    println(levelCount);
     if(generateCount!=0&&levelCount%20==0){
 //      for(int i=0;i<random(10, 20);i++){
+      if(generateCount%5==0)
+        generatePoint = (int)random(0, randomPoint.length);
       actorObject enemy = new actorObject(new PVector(randomPoint[generatePoint], 0), new PVector(0, 1));
       enemy.setAtkSpeed((int)random(40+enemyLimit, 50+enemyLimit));
       enemy.control(' ', true);
@@ -264,7 +267,7 @@ public class game extends PApplet{
     private int weal;//weapon level
     private boolean stpd = false;//shotting key pressed
     private final int bulletLimitMax = 20;
-    private int bulletLimit = 20, bulletCounter = 0;
+    private int bulletLimit = 20, bulletCounter = 0, bulletSpeed = 5;
     private int animationCounter = 0, animationMode = 0;
     public PVector size = new PVector(20, 20);
             //, shottingDelay = 0;
@@ -287,6 +290,9 @@ public class game extends PApplet{
     }
     actorObject(PVector p){
       this.pos = p;
+    }
+    public void setBulletSpeed(int s) {
+      this.bulletSpeed = s;
     }
     public void setAtkSpeed(int speed) {
       bulletLimit = speed;
@@ -383,7 +389,7 @@ public class game extends PApplet{
           bullets.add(
               new bulletObject(
                 new PVector(this.pos.x+size.x/2*(i==0?-1:1), this.pos.y+this.size.y/2*this.dir.y), 
-                new PVector(0, 5*dir.y)
+                new PVector(0, bulletSpeed*dir.y)
               )
             );
         }
@@ -393,7 +399,7 @@ public class game extends PApplet{
           bullets.add(
             new bulletObject(
               new PVector(this.pos.x+size.x/6*i, this.pos.y+this.size.y/2*this.dir.y), 
-              new PVector((float)1*i, 20*dir.y)
+              new PVector((float)1*i, bulletSpeed*dir.y)
             )
           );
       }
