@@ -43,11 +43,11 @@ public class game extends PApplet{
 //    e1.control(' ', true);
 //    e1.setAtkSpeed(50);
     for(int i=0;i<randomPoint.length;i++) {
-      randomPoint[i] = (int) random(width/10, width*9/10);
+      randomPoint[i] = (int) random(width/5, width/10*8);
       println(randomPoint[i]);
     }
     for(int i=0;i<3&&false;i++) {
-      actorObject enemy = new actorObject(new PVector(random(0, width), 0), new PVector(0, 1));
+      actorObject enemy = new actorObject(new PVector(random(width/5, width/10*8), 0), new PVector(0, 1));
       enemy.setAtkSpeed((int)random(40, 50));
       enemy.control(' ', true);
       enemy.randomWalk(true);
@@ -164,21 +164,29 @@ public class game extends PApplet{
   public void gameing(){
 //    mainbg.display();
     player.run();
-    levelCount = (levelCount+1+((enemyLimit-enemys.size())/10))%levelDelay;
+    levelCount = (levelCount+1)%levelDelay;
+    if(levelCount%20==0)
     println(levelCount);
     if(levelCount==0) {
+      println("generate");
+      if(levelDelay<150) {
+        levelDelay+=50;
+      }else if(levelDelay>250) {
+        levelDelay = 50;
+      }
+//      levelDelay = (200+(int)random(0, 100))%(int)random(100, 300);
       generateCount = (int)random(enemyLimit/2, enemyLimit);
       generatePoint = (int)random(0, randomPoint.length);
+      
     }
 //    println(levelCount);
     if(generateCount!=0&&levelCount%20==0){
 //      for(int i=0;i<random(10, 20);i++){
-        actorObject enemy = new actorObject(new PVector(randomPoint[generatePoint], 0), new PVector(0, 1));
-//        println(enemy.pos);
-        enemy.setAtkSpeed((int)random(40+enemyLimit, 50+enemyLimit));
-        enemy.control(' ', true);
-        enemy.randomWalk(true);
-        enemys.add(enemy);
+      actorObject enemy = new actorObject(new PVector(randomPoint[generatePoint], 0), new PVector(0, 1));
+      enemy.setAtkSpeed((int)random(40+enemyLimit, 50+enemyLimit));
+      enemy.control(' ', true);
+      enemy.randomWalk(true);
+      enemys.add(enemy);
 //      }
       generateCount--;
     }
@@ -375,7 +383,7 @@ public class game extends PApplet{
           bullets.add(
               new bulletObject(
                 new PVector(this.pos.x+size.x/2*(i==0?-1:1), this.pos.y+this.size.y/2*this.dir.y), 
-                new PVector(0, 20*dir.y)
+                new PVector(0, 5*dir.y)
               )
             );
         }
@@ -433,7 +441,7 @@ public class game extends PApplet{
         this.pos.add(this.acc);
       }else if(movingMode==1){
         this.pos.add(this.acc);
-        this.pos.x = this.pos.x+5*sin(millis());
+        this.pos.x = this.pos.x+sin((millis()+random(100, 500))/50);
       }
     }
     public void display() {
@@ -446,7 +454,7 @@ public class game extends PApplet{
     }
   }
   class buttonObject{
-    PVector pos, size;
+    PVector pos, size, speed;
     Color normal = new Color(255), hover = new Color(51);
     //size = new PVector(width, height, fontSize);
     String msg;
