@@ -15,6 +15,7 @@ public class game extends PApplet{
   public ArrayList<PImage> pimgpack = new ArrayList<PImage>();
   ArrayList<bulletObject> bullets = new ArrayList<bulletObject>();
   ArrayList<actorObject>  enemys  = new ArrayList<actorObject>();
+  ArrayList<actorObject>  enemy2  = new ArrayList<actorObject>();
   buttonObject menuBtn[] = new buttonObject[5];
   buttonObject pauseBtn[] = new buttonObject[4];
   int levelDelay = 250;
@@ -23,7 +24,9 @@ public class game extends PApplet{
   int generatePoint = -1;
   int randomPoint[] = new int[20];
   int enemyLimit = 0;
-  
+  int em2Clock = 0, em2CLim = 0;
+  int mode = 0;
+
   int grade[] = new int[10];
   //ArrayList keyEvents = new ArrayList();
   public static void main(String[] args) {
@@ -47,13 +50,13 @@ public class game extends PApplet{
       randomPoint[i] = (int) random(width/5, width/10*8);
 //      println(randomPoint[i]);
     }
-    for(int i=0;i<3&&false;i++) {
-      actorObject enemy = new actorObject(new PVector(random(width/5, width/10*8), 0), new PVector(0, 1));
-      enemy.setAtkSpeed((int)random(40, 50));
-      enemy.control(' ', true);
-      enemy.randomWalk(true);
-      enemys.add(enemy);
-    }
+//    for(int i=0;i<3&&false;i++) {
+//      actorObject enemy = new actorObject(new PVector(random(width/5, width/10*8), 0), new PVector(0, 1));
+//      enemy.setAtkSpeed((int)random(40, 50));
+//      enemy.control(' ', true);
+//      enemy.randomWalk(true);
+//      enemys.add(enemy);
+//    }
     levelCount = 0;
     int p = height/10*4;
     int sw = 60;
@@ -131,24 +134,33 @@ public class game extends PApplet{
       if(s){
         switch(btn.msg) {
           case "Hard":
+            player.hp = 3;
+            mode = 3;
             enemyLimit = 30;
             player.changeMode(0);
             player.setAtkSpeed(25);
             levelDelay = 100;
+            em2CLim = 300;
             level++;
           break;
           case "Normal":
+            player.hp = 4;
+            mode = 2;
             enemyLimit = 20;
             player.changeMode(1);
             player.setAtkSpeed(20);
             levelDelay = 150;
+            em2CLim = 500;
             level++;
           break;
           case "Easy":
+            player.hp = 5;
+            mode = 1;
             enemyLimit = 10;
             player.changeMode(1);
             player.setAtkSpeed(3);
             levelDelay = 250;
+            em2CLim = 800;
             level++;
           break;
           case "Grade":
@@ -166,6 +178,16 @@ public class game extends PApplet{
 //    mainbg.display();
     player.run();
     levelCount = (levelCount+1)%levelDelay;
+    em2Clock = (em2Clock+1)%em2CLim;
+    if(em2Clock==0) {
+      int dire = random(0, 10)>5?8:2;
+      actorObject enemy = new actorObject(new PVector(width/10*(dire), 0), new PVector(dire==8?-1:1, 1));
+//      enemy.setAtkSpeed((int)random(10, 15+(3-mode)*10));
+      enemy.setAtkSpeed(mode==3?10:mode==2?20:30);
+//      enemy.control(' ', true);
+      enemy.randomWalk(2);
+      enemy2.add(enemy);
+    }
     if(levelCount%20==0)
 //    println(levelCount);
     if(levelCount==0) {
@@ -186,18 +208,26 @@ public class game extends PApplet{
       if(generateCount%5==0)
         generatePoint = (int)random(0, randomPoint.length);
       actorObject enemy = new actorObject(new PVector(randomPoint[generatePoint], 0), new PVector(0, 1));
-      enemy.setAtkSpeed((int)random(40+enemyLimit, 50+enemyLimit));
+      enemy.setAtkSpeed((int)random(80+enemyLimit, 100+enemyLimit));
       enemy.control(' ', true);
-      enemy.randomWalk(true);
+      enemy.randomWalk(1);
       enemys.add(enemy);
 //      }
       generateCount--;
     }
 
-    for(int i=0;i<enemys.size();i++) {
+    for(int i=0;i<enemys.size();i++) {//display and move
       enemys.get(i).run();
       if(enemys.get(i).pos.y>height) {
         enemys.remove(i);
+        i--;
+      }
+    }
+    for(int i=0;i<enemy2.size();i++) {//display and move
+      enemy2.get(i).run();
+      enemy2.get(i).attack(player.pos);
+      if(enemy2.get(i).pos.y>height) {
+        enemy2.remove(i);
         i--;
       }
     }
@@ -205,20 +235,33 @@ public class game extends PApplet{
     for(int i=0;i<bullets.size();i++){
       bulletObject b = bullets.get(i);
       b.run();
-      for(int j=0;j<enemys.size()||b==null;j++){
+      for(int j=0;j<enemys.size()&&b!=null;j++){
         actorObject e = enemys.get(j);
         if(b!=null&&b.touch(e)&&b.acc.y<0) {
           bullets.remove(i);
           enemys.remove(j);
           j--;
           i--;
+          b = null;
         }
       }
-      if(b!=null) {
-        if(b.touch(player)){
-          enemys = new ArrayList<actorObject>();
-          bullets = new ArrayList<bulletObject>();
-          level = 0;
+      for(int j=0;j<enemy2.size()&&b!=null;j++){
+        actorObject e = enemy2.get(j);
+        if(b!=null&&b.touch(e)&&b.acc.y<0) {
+          bullets.remove(i);
+          enemy2.remove(j);
+          b = null;
+          j--;
+          i--;
+        }
+      }
+      if(b!=null){
+        if(b.touch(player)&&player.invincible==false){
+          player.injured();
+//          enemy2 = new ArrayList<actorObject>();
+//          enemys = new ArrayList<actorObject>();
+//          bullets = new ArrayList<bulletObject>();
+//          level = 0;
         }
         if(b.outside()&&bullets.size()>0) {
 //          println(i+" "+bullets.size());
@@ -243,6 +286,8 @@ public class game extends PApplet{
       player.changeSpeed(1);
     if(key=='H')
       player.changeSpeed(-1);
+    if(key=='Q'&&enemys.size()>0)
+      player.attack(enemys.get(0).pos);
     //debug mode end
   }
   
@@ -261,10 +306,11 @@ public class game extends PApplet{
   }
   
   class actorObject{
-    private boolean radnomWalker = false;
+    private int radnomWalker = 0;
 //    private boolean ranMove = false;
-//    private int hp = 1;
+    int hp = 1;
     private int weal;//weapon level
+    boolean invincible = false;
     private boolean stpd = false;//shotting key pressed
     private final int bulletLimitMax = 20;
     private int bulletLimit = 20, bulletCounter = 0, bulletSpeed = 5;
@@ -297,15 +343,33 @@ public class game extends PApplet{
     public void setAtkSpeed(int speed) {
       bulletLimit = speed;
     }
+    
+    public void injured(){
+      invincible = true;
+      animationCounter = 100;
+      hp--;
+//      println(hp);
+      animationMode = hp==0?2:1;      
+    }
+    
     public void run() {
+      if(animationCounter>0){
+        animationCounter--;
+      }else if(invincible==true){
+        animationMode = 0;
+        invincible = false;
+      }
       this.move();
       this.display();
       this.animation();
-      if(radnomWalker){
+      if(radnomWalker==1){
         float s = 2*sin(PI/100*(ranwalk++));
 //        println(s);
         pos.x+=s+random(-1, 1);
         pos.y+=random(1,2);
+      }else if(radnomWalker==2){
+        this.pos.y+=height/500;
+        this.pos.x+=dir.x;
       }
         
       if(stpd)
@@ -315,13 +379,15 @@ public class game extends PApplet{
     }
     public void animation(){
       if(animationCounter!=0&&animationMode==0){
-        animationCounter = 0;
-      }else if(animationMode==1){//explostion
+//        animationCounter = 0;
+      }else if(animationMode==1){//injure
+
+      }else if(animationMode==2){//explostion
         
       }
     }
     
-    public void randomWalk(boolean status){
+    public void randomWalk(int status){
       this.radnomWalker = status;
     }
     
@@ -333,7 +399,9 @@ public class game extends PApplet{
         this.pos.y+=this.acc.y;
     }
     public void display(){
-      if(style!=null) {
+      if(animationCounter%2==1)
+        return;
+      if(style!=null){
         float xResize = (float) (size.x*(acc.x==0?1:0.9));
         image(style, this.pos.x-size.x/2, this.pos.y-size.y/2, xResize, size.y);
         return;
@@ -375,6 +443,24 @@ public class game extends PApplet{
     }
     public void changeMode(int mode){
       weal = mode;
+    }
+    public void attack(PVector target){
+      bulletCounter = (bulletCounter+1)%bulletLimit;
+      if(bulletCounter!=0)
+        return;
+      if(dir.y*(pos.y-target.y)>0)
+        return;
+      if(this.pos.x<0||this.pos.x>width)
+        return;
+      float r = sqrt(pow(target.x-this.pos.x, 2)+pow(target.y-this.pos.y, 2));
+      float x = bulletSpeed*(target.x-this.pos.x)/r,
+            y = bulletSpeed*(target.y-this.pos.y)/r;
+      bullets.add(
+          new bulletObject(
+            new PVector(this.pos.x+x*5, this.pos.y+y*5),
+            new PVector(x, y)
+          )
+        );
     }
     public void shooting(){
 //      if(bulletCounter>bulletLimit) {
@@ -424,9 +510,14 @@ public class game extends PApplet{
 //            p4r = sqrt(pow(abs( pos.x-a.pos.x ), 2)+pow(abs( pos.y-(a.pos.y+a.size.y) ), 2));
 //      float pr  = sqrt( pow(size.x, 2) + pow(size.y, 2) )/2;
 //      if(p1r<=pr||p2r<=pr||p3r<=pr||p4r<=pr)
+//      if(pos.x>=a.pos.x&&
+//         pos.y>=a.pos.y&&
+//         pos.x<=a.pos.x+a.size.x&&
+//         pos.y<=a.pos.y+a.size.y)
       if(pos.x>=a.pos.x&&
          pos.y>=a.pos.y&&
-         pos.x<=a.pos.x+a.size.x&&pos.y<=a.pos.y+a.size.y)
+         pos.x<=a.pos.x+a.size.x&&
+         pos.y<=a.pos.y+a.size.y)
           return true;
       return false;
     }
