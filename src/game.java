@@ -10,14 +10,15 @@ public class game extends PApplet{
   boolean lock = false;
   static int level = 0;
   static boolean pause = false;
-  actorObject player;
+  actorObject player, boss;
   static backgroundSystem mainbg = null;
   public ArrayList<PImage> pimgpack = new ArrayList<PImage>();
   ArrayList<bulletObject> bullets = new ArrayList<bulletObject>();
   ArrayList<actorObject>  enemys  = new ArrayList<actorObject>();
   ArrayList<actorObject>  enemy2  = new ArrayList<actorObject>();
-  buttonObject menuBtn[] = new buttonObject[5];
-  buttonObject pauseBtn[] = new buttonObject[4];
+  PFont bitFont;
+  buttonObject menuBtn[] = new buttonObject[4];
+  buttonObject pauseBtn[] = new buttonObject[3];
   boolean gameover = false;
   int overtimer = 0;
   int levelDelay = 250;
@@ -29,7 +30,8 @@ public class game extends PApplet{
   int em2Clock = 0, em2CLim = 0;
   int mode = 0;
   int levelCounter = 0;
-
+  String gameResult = "Game Over";
+  
   int grade[] = new int[10];
   //ArrayList keyEvents = new ArrayList();
   public static void main(String[] args) {
@@ -41,6 +43,15 @@ public class game extends PApplet{
   }
 
   public void setup(){
+//    bitFont = loadFont("assets/PressStart2P.ttf");
+//    textFont(bitFont);
+//    PFont mono;
+//    mono = loadFont("assets/PressStart2P.ttf");
+//    textFont(mono);
+//    PFont myFont = createFont("assets/PressStart2P", 24);
+//    textFont(myFont);
+//    textAlign(CENTER, CENTER);
+//    text("!@#$%", width/2, height/2);
     pimgpack.add(loadImage("images/main-page.png"));//0
     pimgpack.add(loadImage("images/explostion.png"));//1
     pimgpack.add(loadImage("images/health.png"));//2
@@ -69,13 +80,13 @@ public class game extends PApplet{
     menuBtn[0x0] = new buttonObject(new PVector(width/2, p+=sw+(sw/10)), "Easy",    new PVector(sw*3, sw, 48), new Color("#FFFFFF"), new Color("#006620"));
     menuBtn[0x1] = new buttonObject(new PVector(width/2, p+=sw+(sw/10)), "Normal",  new PVector(sw*3, sw, 48), new Color("#FFFFFF"), new Color("#1F00AF"));
     menuBtn[0x2] = new buttonObject(new PVector(width/2, p+=sw+(sw/10)), "Hard",    new PVector(sw*3, sw, 48), new Color("#ffffff"), new Color("#FF4500"));
-    menuBtn[0x3] = new buttonObject(new PVector(width/2, p+=sw+(sw/10)), "Grade",   new PVector(sw*3, sw, 48));
-    menuBtn[0x4] = new buttonObject(new PVector(width/2, p+=sw+(sw/10)), "Exit",    new PVector(sw*3, sw, 48), new Color("#FF0000"), new Color("#D40000"));
+//    menuBtn[0x3] = new buttonObject(new PVector(width/2, p+=sw+(sw/10)), "Grade",   new PVector(sw*3, sw, 48));
+    menuBtn[0x3] = new buttonObject(new PVector(width/2, p+=sw+(sw/10)), "Exit",    new PVector(sw*3, sw, 48), new Color("#FF0000"), new Color("#D40000"));
     p = height/10*4;
     pauseBtn[0x0] = new buttonObject(new PVector(width/2, p+=sw+(sw/10)), "Continue",   new PVector(200, sw, 36), new Color("#FFFFFF"), new Color("#006620"));
-    pauseBtn[0x1] = new buttonObject(new PVector(width/2, p+=sw+(sw/10)), "Grade",      new PVector(200, sw, 36), new Color("#FFFFFF"), new Color("#1F00AF"));
-    pauseBtn[0x2] = new buttonObject(new PVector(width/2, p+=sw+(sw/10)), "Main",       new PVector(200, sw, 36), new Color("#ffffff"), new Color("#FF4500"));
-    pauseBtn[0x3] = new buttonObject(new PVector(width/2, p+=sw+(sw/10)), "Exit",       new PVector(200, sw, 36), new Color("#FF0000"), new Color("#D40000"));
+//    pauseBtn[0x1] = new buttonObject(new PVector(width/2, p+=sw+(sw/10)), "Grade",      new PVector(200, sw, 36), new Color("#FFFFFF"), new Color("#1F00AF"));
+    pauseBtn[0x1] = new buttonObject(new PVector(width/2, p+=sw+(sw/10)), "Main",       new PVector(200, sw, 36), new Color("#ffffff"), new Color("#FF4500"));
+    pauseBtn[0x2] = new buttonObject(new PVector(width/2, p+=sw+(sw/10)), "Exit",       new PVector(200, sw, 36), new Color("#FF0000"), new Color("#D40000"));
     PImage test = loadImage("images/game-bg.png");
     PImage mainbglist[] = {test, test};
     mainbg = new backgroundSystem(mainbglist);
@@ -97,7 +108,7 @@ public class game extends PApplet{
           startMenu();
         break;
         case 1:
-          gameing();
+          gaming();
         break;
         case 2:
           bossLevel();
@@ -106,15 +117,8 @@ public class game extends PApplet{
         case 99:
           gradeList();
         break;
-      }      
+      }
     }
-  }
-  
-  public void bossLevel(){
-    for(int i=0;i<player.maxhp;i++){
-      image(pimgpack.get(i<player.hp?2:3), i*32, 10, 32, 32);
-    }
-    player.run();
   }
   
   public void pauseMenu(){
@@ -142,6 +146,7 @@ public class game extends PApplet{
     }
   }
   public void startMenu(){
+    player.animationMode = 0;
     image(pimgpack.get(0), 0, 0, width, height);
 //    PImage bg = pimgpack.get(0);
 //    image(bg, 0, 0, width, height);
@@ -154,6 +159,7 @@ public class game extends PApplet{
         player.animationCounter = 50;
         switch(btn.msg) {
           case "Hard":
+            levelCounter = 0;
             player.setHp(3);
             mode = 3;
             enemyLimit = 10;
@@ -164,6 +170,7 @@ public class game extends PApplet{
             level++;
           break;
           case "Normal":
+            levelCounter = 0;
             player.setHp(4);
             mode = 2;
             enemyLimit = 20;
@@ -174,6 +181,7 @@ public class game extends PApplet{
             level++;
           break;
           case "Easy":
+            levelCounter = 0;
             player.setHp(5);
             mode = 1;
             enemyLimit = 10;
@@ -194,7 +202,126 @@ public class game extends PApplet{
     }
   }
   
-  public void gameing(){
+  public void bossLevel(){
+//    println(boss.radnomWalker);
+    levelCounter++;
+    for(int i=0;i<player.maxhp;i++){
+      image(pimgpack.get(i<player.hp?2:3), i*32%(width-20*32), 10+((i==0?1:i)*32/(width-20*32))*32, 32, 32);
+    }
+    for(int i=0;i<boss.maxhp;i++){
+      if(levelCounter/20>i)
+        image(pimgpack.get(i<boss.hp?2:3), width-(i+1)*32, 10, 32, 32);
+    }
+    if(levelCounter<200) {
+      boss.pos.y+=1.2;
+    }else if(levelCounter<300) {
+      boss.randomWalk(3);
+      boss.setBulletSpeed(8);
+      boss.setAtkSpeed(13);
+    }else{
+      if(boss.invincible&&!gameover){
+        boss.pos = new PVector(random(boss.style.width, width-boss.style.width), boss.pos.y);
+      }
+
+      if(boss.hp>8) {
+        boss.changeMode(0);
+        boss.shooting();
+      }else if(boss.hp>5) {
+        boss.changeMode(2);
+        boss.setBulletSpeed(4);
+        boss.setAtkSpeed(24);
+        boss.shooting();
+      }else if(boss.hp>3){
+        boss.setBulletSpeed(8);
+        boss.setAtkSpeed(10);
+        boss.changeMode(0);
+        boss.shooting();
+      }else if(boss.hp>0){
+        boss.attack(player.pos);
+      }
+//      if(boss.invincible==true) {
+//        boss.randomWalk(0);
+//      }else if(){
+//        boss.attack(player.pos);
+//        boss.randomWalk(3);
+//      }
+      for(int i=0;i<(10-boss.hp)&&!gameover;i++) {
+        boss.move();
+      }
+    }
+
+    if(player.pos.x+player.size.x/2>=boss.pos.x-boss.size.x/2&&
+       player.pos.x-player.size.x/2<=boss.pos.x+boss.size.x/2&&
+       player.pos.y-player.size.y/2<=boss.pos.y+boss.size.y/2&&
+       player.invincible==false){
+      player.injured();
+      if(player.hp==0){
+        gameResult = "Game Over";
+        gameover = true;
+        overtimer = 350;
+      }
+    }
+
+    for(int i=0;i<bullets.size();i++) {
+      bulletObject b = bullets.get(i);
+      b.run();
+      if(b.touch(boss)&&boss.invincible==false&&levelCounter>300&&b.acc.y<0&&!gameover){
+        boss.injured();
+        if(boss.hp==0) {
+          boss.injured(2000);
+          gameResult = "You won!!!";
+          gameover = true;
+          overtimer = 350;
+        }
+      }
+        
+      if(b.touch(player)&&player.invincible==false&&levelCounter>300&&b.acc.y>0&&!gameover){
+        player.injured();
+        if(player.hp==0){
+          gameResult = "Game Over";
+          gameover = true;
+          overtimer = 350;
+        }
+      }
+      if(b.outside()&&bullets.size()>0) {
+        bullets.remove(i);
+        i--;
+      }
+
+    }
+    boss.run();
+    if(!gameover||gameResult=="Game Over") {
+//      boss.display();
+    }
+    if(gameover||gameResult=="You won!!!") {
+      boss.display();
+      player.display();
+//      player.move();
+    }
+    
+    if(!gameover)
+      player.run();
+    else if(overtimer>0){
+      textSize(60);
+      float x = width/2, y = height/2+height/(351-overtimer);
+      fill(255);
+      rect(x-10-textWidth(gameResult)/2, y-70, textWidth(gameResult)+20, 150);
+      fill(0);
+      text(gameResult, x-textWidth(gameResult)/2, y);
+      String dtime = (overtimer/70)+"";
+      text(dtime, x-textWidth(dtime)/2, y+60);
+      overtimer--;
+    }else {
+      gameover = false;
+      enemy2 = new ArrayList<actorObject>();
+      enemys = new ArrayList<actorObject>();
+      bullets = new ArrayList<bulletObject>();
+      level = 0;
+    }
+    
+  }
+  
+  public void gaming(){
 //    mainbg.display();
     levelCounter = (levelCounter+1);
     textSize(60);
@@ -214,7 +341,15 @@ public class game extends PApplet{
       level = 2;
       player.invincible = true;
       player.animationCounter = 200;
+      enemy2 = new ArrayList<actorObject>();
+      enemys = new ArrayList<actorObject>();
+//      bullets = new ArrayList<bulletObject>();
       levelCounter = 0;
+      boss = new actorObject(new PVector(width/2, -100), pimgpack.get(2));
+      boss.dir = new PVector(0, 1);
+      gameResult = "";
+      boss.setHp(10);
+//      boss.control('s', true);
     }
     for(int i=0;i<player.maxhp;i++){
       image(pimgpack.get(i<player.hp?2:3), i*32, 10, 32, 32);
@@ -314,7 +449,7 @@ public class game extends PApplet{
       }
       if(b!=null){
         if(b.touch(player)&&player.invincible==false){
-//          player.injured();
+          player.injured();
           if(player.hp==0) {
             gameover = true;
             overtimer = 350;
@@ -355,6 +490,7 @@ public class game extends PApplet{
   }
   
   public boolean gradeList(){
+    
     return true;
   }
   
@@ -371,7 +507,15 @@ public class game extends PApplet{
     if(key=='Q'&&enemys.size()>0)
       player.attack(enemys.get(0).pos);
     if(key=='Z')
-      levelCounter+=100;
+      levelCounter = 3400;
+    if(key=='X'&&boss!=null) {
+      boss.hp = 1;
+    }
+    if(key=='C') {
+      if(player.maxhp==player.hp)
+        player.maxhp++;
+      player.hp++;
+    }
     //debug mode end
   }
   
@@ -382,15 +526,18 @@ public class game extends PApplet{
     //for(int i=0;i<keyEvents.size();i++)
       //keyEvents[i].control(key, true);
     player.control(key, true);
+    player.control(keyCode, true);
 //    enemys.get(0).control(key, true);
   }
   public void keyReleased(){
     player.control(key, false);
+    player.control(keyCode, false);
 //    enemys.get(0).control(key, false);
   }
   
   class actorObject{
     private int radnomWalker = 0;
+    boolean faster = false;
 //    private boolean ranMove = false;
     int hp = 1, maxhp = 1;
     private int weal;//weapon level
@@ -406,6 +553,12 @@ public class game extends PApplet{
             acc = new PVector(0,0,5);
     PVector dir = new PVector(0, -1);
     float ranwalk = 0;
+    actorObject(PVector p, PImage style){
+      this.style = style;
+      size = new PVector(style.width, style.height);
+      this.pos = p;
+    }
+
     actorObject(PImage style, PVector p){
       this.style = style;
       size = new PVector(
@@ -437,8 +590,13 @@ public class game extends PApplet{
       invincible = true;
       animationCounter = 100;
       hp--;
-//      println(hp);
-      animationMode = hp==0?2:1;      
+      animationMode = 1;      
+    }
+    
+    public void injured(int delay){
+      invincible = true;
+      animationCounter = delay;
+      animationMode = 1;      
     }
     
     public void run() {
@@ -448,18 +606,12 @@ public class game extends PApplet{
         animationMode = 0;
         invincible = false;
       }
+
+      if(faster)
+        this.move();
       this.move();
       this.display();
       this.animation();
-      if(radnomWalker==1){
-        float s = 2*sin(PI/100*(ranwalk++));
-//        println(s);
-        pos.x+=s+random(-1, 1);
-        pos.y+=random(1,2);
-      }else if(radnomWalker==2){
-        this.pos.y+=height/500;
-        this.pos.x+=dir.x;
-      }
         
       if(stpd)
         this.shooting();
@@ -482,6 +634,27 @@ public class game extends PApplet{
     }
     
     public void move(){
+      if(radnomWalker==1){
+        float s = 2*sin(PI/100*(ranwalk++));
+//        println(s);
+        pos.x+=s+random(-1, 1);
+        pos.y+=random(1,2);
+      }else if(radnomWalker==2){
+        this.pos.y+=height/500;
+        this.pos.x+=dir.x;
+      }else if(radnomWalker==3){
+        float x = this.pos.x+1+style.width/2;
+        if(x<width)
+          this.pos.x++;
+        else
+          radnomWalker = 4;
+      }else if(radnomWalker==4){
+        float x = this.pos.x-1-style.width/2;
+        if(x>0)
+          this.pos.x--;
+        else
+          radnomWalker = 3;
+      }
       float x = this.pos.x+this.acc.x, y = this.pos.y+this.acc.y;
       if(x>0&&x<width)
         this.pos.x+=this.acc.x;
@@ -519,6 +692,13 @@ public class game extends PApplet{
         case ' ':
           stpd = pressed;
           //this.shooting();
+        break;
+      }
+    }
+    public void control(int k, boolean pressed){
+      switch(k){
+        case 16:
+          faster = pressed;
         break;
       }
     }
@@ -614,10 +794,14 @@ public class game extends PApplet{
 //         pos.y>=a.pos.y&&
 //         pos.x<=a.pos.x+a.size.x&&
 //         pos.y<=a.pos.y+a.size.y)
-      if(pos.x+size.x>=a.pos.x&&
-         pos.y+size.y>=a.pos.y&&
-         pos.x<=a.pos.x+a.size.x&&
-         pos.y<=a.pos.y+a.size.y)
+//      if(pos.x>=a.pos.x&&
+//         pos.y>=a.pos.y&&
+//         pos.x<=a.pos.x+a.size.x&&
+//         pos.y<=a.pos.y+a.size.y)
+      if(pos.x>=a.pos.x-a.size.x/2&&
+         pos.y>=a.pos.y-a.size.y/2&&
+         pos.x<=a.pos.x+a.size.x/2&&
+         pos.y<=a.pos.y+a.size.y/2)
           return true;
       return false;
     }
