@@ -31,6 +31,9 @@ public class game extends PApplet{
   int mode = 0;
   int levelCounter = 0;
   String gameResult = "Game Over";
+  ArrayList<itemObject> props = new ArrayList<itemObject>();
+  
+  int bossStyleID = 2;
   
   int grade[] = new int[10];
   //ArrayList keyEvents = new ArrayList();
@@ -56,6 +59,11 @@ public class game extends PApplet{
     pimgpack.add(loadImage("images/explostion.png"));//1
     pimgpack.add(loadImage("images/health.png"));//2
     pimgpack.add(loadImage("images/darkHealth.png"));//3
+    pimgpack.add(loadImage("assets/pistol.png"));//4
+    pimgpack.add(loadImage("assets/shotgun.png"));//5
+    pimgpack.add(loadImage("assets/speed+.png"));//6
+    pimgpack.add(loadImage("assets/speed-.png"));//7
+    pimgpack.add(loadImage("assets/trash-boss.png"));//8
     PImage playerStyle = loadImage("images/player.png");
     player = new actorObject(playerStyle, new PVector(width/2, height/2));
     player.setBulletSpeed(20);
@@ -205,6 +213,7 @@ public class game extends PApplet{
   public void bossLevel(){
 //    println(boss.radnomWalker);
     levelCounter++;
+    itemCore();
     for(int i=0;i<player.maxhp;i++){
       image(pimgpack.get(i<player.hp?2:3), i*32%(width-20*32), 10+((i==0?1:i)*32/(width-20*32))*32, 32, 32);
     }
@@ -226,17 +235,20 @@ public class game extends PApplet{
       if(boss.hp>8) {
         boss.changeMode(0);
         boss.shooting();
-      }else if(boss.hp>5) {
+      }else if(boss.hp>6) {
         boss.changeMode(2);
         boss.setBulletSpeed(4);
         boss.setAtkSpeed(24);
         boss.shooting();
-      }else if(boss.hp>3){
+      }else if(boss.hp>4){
         boss.setBulletSpeed(8);
         boss.setAtkSpeed(10);
         boss.changeMode(0);
         boss.shooting();
+      }else if(boss.hp>2){
+        boss.attack(player.pos);
       }else if(boss.hp>0){
+        boss.setBulletSpeed(14);
         boss.attack(player.pos);
       }
 //      if(boss.invincible==true) {
@@ -261,6 +273,15 @@ public class game extends PApplet{
         overtimer = 350;
       }
     }
+//    if(player.hp>0&&gameover==true&&bossStyleID==8) {
+//      gameover = false;
+//      overtimer = 0;
+//    }else if(player.hp==0&&bossStyleID==8&&overtimer<60){
+//      gameover = false;
+//      overtimer = 0;
+//      player.hp = 1;
+//      boss.injured();
+//    }
 
     for(int i=0;i<bullets.size();i++) {
       bulletObject b = bullets.get(i);
@@ -321,9 +342,47 @@ public class game extends PApplet{
     
   }
   
+  public void itemCore(){
+    for(int i=0;i<props.size();i++){
+      itemObject obj = props.get(i);
+      obj.run();
+      if(obj.touch(player)) {
+//        println(obj.itemName);
+        switch(obj.itemName){
+          case "HP":
+            if(player.hp==player.maxhp)
+              player.maxhp++;
+            player.hp++;
+          break;
+          case "WA":
+            player.changeMode(0);
+          break;
+          case "WB":
+            player.changeMode(1);
+          break;
+          case "PAS":
+            for(int j=0;j<4;j++)
+              player.changeSpeed(-1);
+          break;
+          case "MAS":
+            for(int j=0;j<4;j++)
+              player.changeSpeed(1);
+          break;
+        }
+//        println(player.bulletLimit);
+        props.remove(i);
+        i--;
+      }
+    }
+  }
+  
   public void gaming(){
 //    mainbg.display();
     levelCounter = (levelCounter+1);
+    itemCore();
+    if(levelCounter%400==0) {
+      createNewProp();
+    }
     textSize(60);
     String lastTime = ""+(60-levelCounter/60);
     fill(255);
@@ -345,7 +404,7 @@ public class game extends PApplet{
       enemys = new ArrayList<actorObject>();
 //      bullets = new ArrayList<bulletObject>();
       levelCounter = 0;
-      boss = new actorObject(new PVector(width/2, -100), pimgpack.get(2));
+      boss = new actorObject(new PVector(width/2, -100), pimgpack.get(bossStyleID));
       boss.dir = new PVector(0, 1);
       gameResult = "";
       boss.setHp(10);
@@ -482,6 +541,7 @@ public class game extends PApplet{
       overtimer--;
     }else {
       gameover = false;
+      props = new ArrayList<itemObject>();
       enemy2 = new ArrayList<actorObject>();
       enemys = new ArrayList<actorObject>();
       bullets = new ArrayList<bulletObject>();
@@ -508,6 +568,15 @@ public class game extends PApplet{
       player.attack(enemys.get(0).pos);
     if(key=='Z')
       levelCounter = 3400;
+    if(key=='F') {
+      player.animationCounter = 600;
+      player.invincible = true;
+    }
+    if(key=='P') {
+      bossStyleID = 8;
+    }else if(key=='K') {
+      bossStyleID = 2;
+    }
     if(key=='X'&&boss!=null) {
       boss.hp = 1;
     }
@@ -519,8 +588,10 @@ public class game extends PApplet{
     //debug mode end
   }
   
-  public void mousePressed(){
-    
+//  public void mousePressed(){
+  public void createNewProp(){
+    int dire = random(0, 10)>5?8:2;
+    props.add(new itemObject(new PVector(width/10*(dire), 0), new PVector(dire==8?-1:1, 1)));
   }
   public void keyPressed(){
     //for(int i=0;i<keyEvents.size();i++)
@@ -547,7 +618,7 @@ public class game extends PApplet{
     private int bulletLimit = 20, bulletCounter = 0, bulletSpeed = 5;
     private int animationCounter = 0, animationMode = 0;
     public PVector size = new PVector(20, 20);
-            //, shottingDelay = 0;
+            //, sho-ttingDelay = 0;
     PImage style = null;
     PVector pos = null,
             acc = new PVector(0,0,5);
@@ -691,6 +762,9 @@ public class game extends PApplet{
         break;
         case ' ':
           stpd = pressed;
+          if(!stpd) {
+            bulletCounter = bulletLimit-1;
+          }
           //this.shooting();
         break;
       }
@@ -769,6 +843,43 @@ public class game extends PApplet{
             )
           );
       }
+    }
+  }
+  class itemObject{
+    PVector pos, acc;
+    PVector size = new PVector(32, 32);
+    PImage style;
+    int items[] = {2,4,5,6,7};//0 補血, 1 武器A, 2 武器B, 3 武器加速, 4 武器減速 
+    String itemsName[] = {"HP", "WA", "WB", "PAS", "MAS"};
+    String itemName = null;
+    int item = -1;
+    itemObject(PVector p, PVector a){
+      pos = p;
+      acc = a;
+      int rani;
+      if(random(player.hp, player.maxhp)<player.maxhp/2&&player.hp==1)
+        rani = 0;
+      else
+        rani = floor(random(0, items.length));
+      item = items[rani];
+      itemName = itemsName[rani];
+    }
+    void run(){
+      this.move();
+      this.display();
+    }
+    void move(){
+      this.pos.add(this.acc);
+      this.pos.add(random(this.acc.x*2, this.acc.x*3), 1.5f);
+    }
+    void display(){image(pimgpack.get(item), pos.x, pos.y, size.x, size.y);}
+    boolean touch(actorObject a){
+      if(pos.x+size.x>=a.pos.x-a.size.x/2&&
+         pos.y+size.x>=a.pos.y-a.size.y/2&&
+         pos.x<=a.pos.x+a.size.x/2&&
+         pos.y<=a.pos.y+a.size.y/2)
+           return true;
+      return false;
     }
   }
   class bulletObject{
