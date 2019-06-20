@@ -1,0 +1,34 @@
+# NCU Introduction to COmputer Science II - Final project
+
+## information
+ - student:資工一A 107502541 傅文宗
+ - java-version:
+    - openjdk version "1.8.0_212"
+    - OpenJDK Runtime Environment (build 1.8.0_212-8u212-b03-0ubuntu1.18.04.1-b03)
+    - OpenJDK 64-Bit Server VM (build 25.212-b03, mixed mode)
+ - library:
+    - PDE - [(Processing Core)](https://github.com/processing/processing)
+      - processing.core.PVector
+      - processing.core.PImage
+    - java.util.ArrayList
+ - control:
+    - 移動:
+      - W||w - 上
+      - A||a - 左
+      - S||s - 下
+      - D||d - 右
+    - 攻擊: [Space]
+    - Debug Key:
+      - 改變武器模式:
+        - T -> mode A
+        - G -> mode B
+      - 改變武器速度:
+        - Y -> 減慢
+        - H -> 加快
+      - 玩家自動攻擊敵人: Q
+      - 玩家無敵 10 秒: F
+      - 修改BOSS:
+        - 韓草包: P // 屁眼看宇宙
+        - 標 準 : K // 愛心
+      - 修改BOSS血量為 1 : X
+      - 玩家加血: C
