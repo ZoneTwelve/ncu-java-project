@@ -7,7 +7,7 @@
     - OpenJDK Runtime Environment (build 1.8.0_212-8u212-b03-0ubuntu1.18.04.1-b03)
     - OpenJDK 64-Bit Server VM (build 25.212-b03, mixed mode)
  - library:
-    - PDE - [(Processing Core)](https://github.com/processing/processing)
+    - PDE - [(Processing Core)](https://github.com/processing/processing) - [使用Processing Core on eclipse](https://www.processing.org/tutorials/eclipse/)
       - processing.core.PVector
       - processing.core.PImage
     - java.util.ArrayList
